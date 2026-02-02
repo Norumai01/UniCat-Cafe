@@ -94,3 +94,6 @@ node_modules
 # OS files
 .DS_Store
 Thumbs.db
+
+# Frontend files
+frontend

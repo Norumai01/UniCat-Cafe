@@ -1,6 +1,7 @@
 import handleCORS from "./utils/cors.js";
 import { getValidToken, forceRefreshToken } from "./utils/oauth.js";
 import dotenv from "dotenv";
+import {extractChannelInfo, verifyJWT} from "./utils/jwt.js";
 
 dotenv.config();
 
@@ -8,17 +9,82 @@ export default async function handler(req, res) {
   if (handleCORS(req, res)) return;
 
   try {
+
+    /*
+    ===================================================
+    1. Verify JWT Token (Get targeted Channel ID from Extension)
+    ===================================================
+    */
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+
+    if (!authHeader) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        details: "Missing token"
+      });
+    }
+
+    // Extract and verify JWT
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    let jwtPayload;
+
+    try {
+      jwtPayload = await verifyJWT(token);
+    }
+    catch (error) {
+      console.error('JWT verification failed:', error);
+      return res.status(401).json({
+        error: "Unauthorized",
+        details: "Invalid or expired token"
+      });
+    }
+
+    const { channelId, userId, opaqueUserId, role, isUnlinked } = extractChannelInfo(jwtPayload);
+
+    console.log('🔐 Authenticated request:');
+    console.log('  Channel ID:', channelId);
+    console.log('  User ID:', userId || opaqueUserId);
+    console.log('  Role:', role);
+
+    /*
+    ===================================================
+    2. CHECK RATE LIMITS (TO BE IMPLEMENTED)
+    ===================================================
+    */
+
+    /*
+    ===================================================
+    3. GET BOT CREDENTIAL
+    ===================================================
+    */
     const CLIENT_ID = process.env.CLIENT_ID;
     const BOT_ID = process.env.BOT_ID;
-    const STREAMER_ID = process.env.STREAMER_CHANNEL_ID;
 
-    if (!CLIENT_ID || !BOT_ID || !STREAMER_ID) {
+    if (!CLIENT_ID || !BOT_ID) {
       return res.status(500).json({
         error: "Server configuration error.",
         details: "Missing required environment variables."
       });
     }
 
+    // Obtain token for API Requests
+    let botToken;
+    try {
+      botToken = await getValidToken();
+    }
+    catch (tokenError) {
+      console.error('Failed to get valid token:', tokenError);
+      return res.status(500).json({
+        error: 'OAuth token error',
+        details: tokenError.message
+      });
+    }
+
+    /*
+    ===================================================
+    4. VALIDATE REQUEST BODY
+    ===================================================
+    */
     const { item, username } = req.body;
     if (!item || !username) {
       return res.status(400).json({
@@ -27,127 +93,111 @@ export default async function handler(req, res) {
       });
     }
 
-    // Get valid token (uses cached token if available)
-    let botToken;
-    try {
-      botToken = await getValidToken();
-    } catch (tokenError) {
-      console.error('Failed to get valid token:', tokenError);
-      return res.status(500).json({
-        error: 'OAuth token error',
-        details: tokenError.message
-      });
-    }
-
+    /*
+    ===================================================
+    5. CONSTRUCT MESSAGE FOR TWITCH CHAT
+    ===================================================
+    */
     const message = `☕ @${username} just ordered ${item}!`;
     console.log('📤 Sending message:', message);
+    console.log('   To channel:', channelId);
 
-    // First attempt with cached token
-    let response;
-    try {
-      response = await fetch(`https://api.twitch.tv/helix/chat/messages`, {
-        method: "POST",
-        headers: {
-          "Client-ID": CLIENT_ID,
-          'Authorization': `Bearer ${botToken}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          "broadcaster_id": STREAMER_ID,
-          "sender_id": BOT_ID,
-          "message": message
-        })
-      });
-    } catch (fetchError) {
-      console.error('Fetch error:', fetchError);
-      return res.status(500).json({
-        error: 'Failed to connect to Twitch API',
-        details: fetchError.message
-      });
+    const response = await fetch(`https://api.twitch.tv/helix/chat/messages`, {
+      method: 'POST',
+      headers: {
+        "Client-ID": CLIENT_ID,
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${botToken}`
+      },
+      body: JSON.stringify({
+        "broadcaster_id": channelId,
+        "sender_id": BOT_ID,
+        "message": message
+      })
+    });
+
+    /*
+    ===================================================
+    6. SEND MESSAGE AND HANDLE API
+    ===================================================
+    */
+
+    const contentType = response.headers.get("content-type");
+    let responseData;
+
+    if (contentType && contentType.includes("application/json")) {
+      responseData = await response.json();
+    }
+    else {
+      responseData = await response.text();
     }
 
-    // Success!
-    if (response.ok) {
-      // IMPORTANT: Always consume the response body
-      const contentType = response.headers.get('content-type');
+    if (!response.ok) {
+      console.error('Twitch API error:', response.status, responseData);
 
-      if (contentType && contentType.includes('application/json')) {
-        await response.json();  // Consume JSON response
-      } else {
-        await response.text();  // Consume text/empty response
-      }
+      // Handle retries when encounter error 401
+      if (response.status === 401) {
+        console.log('Token expired, attempting refresh...');
+        try {
+          botToken = await forceRefreshToken();
 
-      console.log('✅ Message sent successfully');
-      return res.status(200).json({
-        success: true,
-        message: 'Order sent to chat!',
-        retriedAfterRefresh: false,
-      });
-    }
+          // Retry the request with new token.
+          const retryResponse = await fetch('https://api.twitch.tv/helix/chat/messages', {
+            method: 'POST',
+            headers: {
+              'Client-ID': CLIENT_ID,
+              'Authorization': `Bearer ${botToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              broadcaster_id: channelId,
+              sender_id: BOT_ID,
+              message: message
+            })
+          });
 
-    // Handle 401 Unauthorized
-    if (response.status === 401) {
-      await response.text();  // Consume error response
-      console.log('🔄 Token expired, refreshing and retrying...');
+          const retryData = await retryResponse.json();
 
-      try {
-        const newToken = await forceRefreshToken();
-
-        const retryResponse = await fetch(`https://api.twitch.tv/helix/chat/messages`, {
-          method: "POST",
-          headers: {
-            "Client-ID": CLIENT_ID,
-            'Authorization': `Bearer ${newToken}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            "broadcaster_id": STREAMER_ID,
-            "sender_id": BOT_ID,
-            "message": message
-          })
-        });
-
-        if (retryResponse.ok) {
-          // Consume response
-          const contentType = retryResponse.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            await retryResponse.json();
-          } else {
-            await retryResponse.text();
+          if (!retryResponse.ok) {
+            console.error('Retry failed:', retryResponse.status, retryData);
+            return res.status(500).json({
+              error: 'Failed to send message to chat',
+              details: retryData
+            });
           }
 
-          console.log('✅ Message sent (after refresh)');
+          console.log("Message sent successfully (after retry)");
           return res.status(200).json({
             success: true,
             message: 'Order sent to chat!',
-            retriedAfterRefresh: true,
+            data: retryData
           });
         }
-
-        // Retry failed
-        await retryResponse.text();
-        return res.status(retryResponse.status).json({
-          error: 'Failed to send message after token refresh',
-          status: retryResponse.status
-        });
-
-      } catch (retryError) {
-        console.error('Token refresh failed:', retryError);
-        return res.status(500).json({
-          error: 'Failed to refresh token and retry',
-          details: retryError.message
-        });
+        catch (retryError) {
+          console.error('Retry failed:', retryError);
+          return res.status(500).json({
+            error: 'Failed to send message to chat',
+            details: retryError.message
+          })
+        }
       }
+
+      // Other errors
+      return res.status(500).json({
+        error: 'Failed to send message to chat',
+        details: responseData,
+        status: response.status
+      });
     }
 
-    // Other error
-    await response.text();  // Consume response
-    return res.status(response.status).json({
-      error: 'Failed to send message to Twitch chat.',
-      status: response.status
+    console.log('✅ Message sent successfully');
+    return res.status(200).json({
+      success: true,
+      message: 'Order sent to chat!',
+      data: responseData
     });
-
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Server error:", error);
     return res.status(500).json({
       error: "Internal server error.",

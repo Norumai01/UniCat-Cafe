@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Configuration</title>
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+            background: #f0f0f0;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+        }
+        h2 { color: #6441a5; margin-top: 0; }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #6441a5;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #7d5bbe; }
+        #status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        #menuItemsList {
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>🐱 Cat Cafe Configuration</h2>
+
+    <div class="section">
+        <h3>Add Menu Items</h3>
+        <div class="input-group">
+            <input id="itemName" placeholder="Item name (e.g., Green Tea)">
+            <input id="itemEmoji" placeholder="Emoji (e.g., ☕)" style="max-width: 100px;">
+            <button id="addItemButton">Add Item</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Current Menu Items</h3>
+        <div id="menuItemsList">
+            <p style="color: #999;">No items added yet.</p>
+        </div>
+    </div>
+
+    <button id="saveButton" style="width: 100%; font-size: 18px; padding: 15px;">💾 Save All Menu Items</button>
+
+    <div id="status"></div>
+</div>
+
+<script src="config.js"></script>
+</body>
+</html>
