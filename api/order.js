@@ -41,20 +41,14 @@ export default async function handler(req, res) {
 
     const { channelId, userId, opaqueUserId, role, isUnlinked } = extractChannelInfo(jwtPayload);
 
-    console.log('🔐 Authenticated request:');
-    console.log('  Channel ID:', channelId);
-    console.log('  User ID:', userId || opaqueUserId);
-    console.log('  Role:', role);
+    console.log('Authenticated request:');
+    console.log('Channel ID:', channelId);
+    console.log('User ID:', userId || opaqueUserId);
+    console.log('Role:', role);
 
     /*
     ===================================================
-    2. CHECK RATE LIMITS (TO BE IMPLEMENTED)
-    ===================================================
-    */
-
-    /*
-    ===================================================
-    3. GET BOT CREDENTIAL
+    2. GET BOT CREDENTIAL
     ===================================================
     */
     const CLIENT_ID = process.env.CLIENT_ID;
@@ -82,7 +76,7 @@ export default async function handler(req, res) {
 
     /*
     ===================================================
-    4. VALIDATE REQUEST BODY
+    3. VALIDATE REQUEST BODY
     ===================================================
     */
     const { item, username } = req.body;
@@ -92,15 +86,30 @@ export default async function handler(req, res) {
         details: "Item and Username are required."
       });
     }
+    // Basic validation to prevent abuse
+    if (item.length > 100) {
+      return res.status(400).json({
+        error: "Invalid item name",
+        details: "Item name too long"
+      });
+    }
+
+    if (username.length > 30) {
+      return res.status(400).json({
+        error: "Invalid username",
+        details: "Username too long"
+      });
+    }
+
 
     /*
     ===================================================
-    5. CONSTRUCT MESSAGE FOR TWITCH CHAT
+    4. CONSTRUCT MESSAGE FOR TWITCH CHAT
     ===================================================
     */
-    const message = `☕ @${username} just ordered ${item}!`;
-    console.log('📤 Sending message:', message);
-    console.log('   To channel:', channelId);
+    const message = `@${username} has ordered ${item}. Please enjoy!`;
+    console.log('Sending message:', message);
+    console.log('To channel:', channelId);
 
     const response = await fetch(`https://api.twitch.tv/helix/chat/messages`, {
       method: 'POST',
@@ -118,7 +127,7 @@ export default async function handler(req, res) {
 
     /*
     ===================================================
-    6. SEND MESSAGE AND HANDLE API
+    5. SEND MESSAGE AND HANDLE API
     ===================================================
     */
 
@@ -190,7 +199,7 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log('✅ Message sent successfully');
+    console.log('Message sent successfully');
     return res.status(200).json({
       success: true,
       message: 'Order sent to chat!',
