@@ -1,0 +1,21 @@
+{
+  "name": "cat-cafe-bot-backend",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Cat Cafe Twitch Extension Backend",
+  "main": "api/order.js",
+  "scripts": {
+    "oauth:url": "node scripts/oauth-setup.js url",
+    "oauth:exchange": "node scripts/oauth-setup.js exchange",
+    "oauth:refresh": "node scripts/oauth-setup.js refresh",
+    "oauth:validate": "node scripts/oauth-setup.js validate",
+    "oauth:getid": "node scripts/oauth-setup.js getid"
+  },
+  "private": true,
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "jsonwebtoken": "^9.0.3",
+    "vercel": "^50.9.6"
+  },
+  "packageManager": "pnpm@10.28.2+sha512.41872f037ad22f7348e3b1debbaf7e867cfd448f2726d9cf74c08f19507c31d2c8e7a11525b983febc2df640b5438dee6023ebb1f84ed43cc2d654d2bc326264"
+}
