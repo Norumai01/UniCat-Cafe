@@ -1,5 +1,5 @@
 import handleCORS from "./utils/cors.js";
-import { getValidToken, forceRefreshToken } from "./utils/oauth.js";
+import {forceRefreshToken, getValidToken} from "./utils/oauth.js";
 import dotenv from "dotenv";
 import {extractChannelInfo, verifyJWT} from "./utils/jwt.js";
 
@@ -9,7 +9,6 @@ export default async function handler(req, res) {
   if (handleCORS(req, res)) return;
 
   try {
-
     /*
     ===================================================
     1. Verify JWT Token (Get targeted Channel ID from Extension)
@@ -101,109 +100,22 @@ export default async function handler(req, res) {
       });
     }
 
-
     /*
     ===================================================
-    4. CONSTRUCT MESSAGE FOR TWITCH CHAT
+    4. SEND MESSAGE TO TWITCH CHAT (WITH AUTO-RETRY)
     ===================================================
     */
     const message = `@${username} has ordered ${item}. Please enjoy!`;
     console.log('Sending message:', message);
     console.log('To channel:', channelId);
 
-    const response = await fetch(`https://api.twitch.tv/helix/chat/messages`, {
-      method: 'POST',
-      headers: {
-        "Client-ID": CLIENT_ID,
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${botToken}`
-      },
-      body: JSON.stringify({
-        "broadcaster_id": channelId,
-        "sender_id": BOT_ID,
-        "message": message
-      })
-    });
-
-    /*
-    ===================================================
-    5. SEND MESSAGE AND HANDLE API
-    ===================================================
-    */
-
-    const contentType = response.headers.get("content-type");
-    let responseData;
-
-    if (contentType && contentType.includes("application/json")) {
-      responseData = await response.json();
-    }
-    else {
-      responseData = await response.text();
-    }
-
-    if (!response.ok) {
-      console.error('Twitch API error:', response.status, responseData);
-
-      // Handle retries when encounter error 401
-      if (response.status === 401) {
-        console.log('Token expired, attempting refresh...');
-        try {
-          botToken = await forceRefreshToken();
-
-          // Retry the request with new token.
-          const retryResponse = await fetch('https://api.twitch.tv/helix/chat/messages', {
-            method: 'POST',
-            headers: {
-              'Client-ID': CLIENT_ID,
-              'Authorization': `Bearer ${botToken}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              broadcaster_id: channelId,
-              sender_id: BOT_ID,
-              message: message
-            })
-          });
-
-          const retryData = await retryResponse.json();
-
-          if (!retryResponse.ok) {
-            console.error('Retry failed:', retryResponse.status, retryData);
-            return res.status(500).json({
-              error: 'Failed to send message to chat',
-              details: retryData
-            });
-          }
-
-          console.log("Message sent successfully (after retry)");
-          return res.status(200).json({
-            success: true,
-            message: 'Order sent to chat!',
-            data: retryData
-          });
-        }
-        catch (retryError) {
-          console.error('Retry failed:', retryError);
-          return res.status(500).json({
-            error: 'Failed to send message to chat',
-            details: retryError.message
-          })
-        }
-      }
-
-      // Other errors
-      return res.status(500).json({
-        error: 'Failed to send message to chat',
-        details: responseData,
-        status: response.status
-      });
-    }
+    const result = await sendMessageWithRetry(CLIENT_ID, botToken, channelId, BOT_ID, message);
 
     console.log('Message sent successfully');
     return res.status(200).json({
       success: true,
       message: 'Order sent to chat!',
-      data: responseData
+      data: result
     });
   }
   catch (error) {
@@ -213,4 +125,72 @@ export default async function handler(req, res) {
       details: error.message || error.toString()
     });
   }
+}
+
+/*
+ * Send chat message with automatic retry on 401 errors.
+ * Throws on failure so the main handler's catch block handles it.
+ */
+async function sendMessageWithRetry(clientId, botToken, channelId, botId, message) {
+  // First attempt
+  let response = await sendChatMessage(clientId, botToken, channelId, botId, message);
+  let data = await parseResponse(response);
+
+  if (response.ok) {
+    return data;
+  }
+
+  // Handle 401 with token refresh and retry
+  if (response.status === 401) {
+    console.log('Token expired, attempting refresh...');
+    const newToken = await forceRefreshToken();
+
+    // Retry with refreshed token
+    response = await sendChatMessage(clientId, newToken, channelId, botId, message);
+    data = await parseResponse(response);
+
+    if (response.ok) {
+      console.log('Message sent successfully after token refresh');
+      return data;
+    }
+
+    console.error('Retry failed:', response.status, data);
+    throw new Error(`Failed to send message after retry: ${response.status}`);
+  }
+
+  // Other errors
+  console.error('Twitch API error:', response.status, data);
+  throw new Error(`Twitch API error: ${response.status}`);
+}
+
+/*
+ * Parse response handling both JSON and text content types.
+ */
+async function parseResponse(response) {
+  const contentType = response.headers.get("content-type");
+
+  if (contentType && contentType.includes("application/json")) {
+    return await response.json();
+  }
+
+  return await response.text();
+}
+
+/*
+ * Request to Twitch API Endpoint for bot to send chat messages.
+ */
+async function sendChatMessage(clientId, botToken, channelId, botId, message){
+  return await fetch(`https://api.twitch.tv/helix/chat/messages`, {
+    method: 'POST',
+    headers: {
+      "Client-ID": clientId,
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${botToken}`
+    },
+    body: JSON.stringify({
+      "broadcaster_id": channelId,
+      "sender_id": botId,
+      "message": message
+    })
+  });
 }
