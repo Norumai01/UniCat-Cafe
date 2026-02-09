@@ -1,17 +1,19 @@
-console.log('Panel script loaded');
+console.log('🐱 Cat Cafe Panel script loaded');
 
 // ⚙️ CONFIGURATION - UPDATE THIS WITH YOUR VERCEL URL
 const BACKEND_URL = 'https://your-vercel-url.vercel.app';
+const COOLDOWN_DURATION = 60 * 1000; // 1 minute in milliseconds
 
 let twitchAuth = null;
 let menuItems = [];
 let viewerDisplayName = 'Viewer'; // Default fallback
+let cooldownTimer = null;
 
 window.Twitch.ext.onAuthorized(async (auth) => {
-  console.log('✅ Authorized!', auth);
-  console.log('Channel ID:', auth.channelId);
-  console.log('User ID:', auth.userId);
-  console.log('JWT Token:', auth.token.substring(0, 20) + '...');
+  console.log('✅ Authorized!');
+  // console.log('✅ Authorized!', auth);
+  // console.log('Channel ID:', auth.channelId);
+  // console.log('User ID:', auth.userId);
 
   twitchAuth = auth;
 
@@ -19,11 +21,13 @@ window.Twitch.ext.onAuthorized(async (auth) => {
   if (!window.Twitch.ext.viewer.isLinked) {
     console.log('👤 Viewer not linked, using "Viewer"');
     viewerDisplayName = 'Viewer';
-  } else {
+  }
+  else {
     await fetchViewerName(auth);
   }
 
   loadConfig();
+  checkCooldown(); // Check if user is on cooldown
 });
 
 async function fetchViewerName(auth) {
@@ -47,14 +51,20 @@ async function fetchViewerName(auth) {
     const body = await response.json();
     const displayName = body.data.at(0)?.display_name;
 
+    // if (displayName) {
+    //   viewerDisplayName = displayName;
+    //   console.log('👤 Viewer name:', viewerDisplayName);
+    // }
     if (displayName) {
       viewerDisplayName = displayName;
-      console.log('👤 Viewer name:', viewerDisplayName);
-    } else {
+      console.log("Viewer name fetched successfully!");
+    }
+    else {
       console.log('⚠️ No display name found, using "Viewer"');
       viewerDisplayName = 'Viewer';
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('❌ Error fetching viewer name:', error);
     viewerDisplayName = 'Viewer';
   }
@@ -72,14 +82,16 @@ function loadConfig() {
     if (data.menuItems && data.menuItems.length > 0) {
       menuItems = data.menuItems;
       displayMenuItems(data.menuItems);
-    } else {
-      document.getElementById('menuDisplay').innerHTML =
-        '<p style="color: #999;">No menu items configured yet.</p>';
     }
-  } else {
+    else {
+      document.getElementById('menuDisplay').innerHTML =
+        '<div class="error-message">No menu items configured yet.</div>';
+    }
+  }
+  else {
     console.log('No config set yet');
     document.getElementById('menuDisplay').innerHTML =
-      '<p style="color: #999;">Streamer needs to configure menu items!</p>';
+      '<div class="error-message">Streamer needs to configure menu items!</div>';
   }
 }
 
@@ -87,39 +99,29 @@ function displayMenuItems(items) {
   const menuDisplay = document.getElementById('menuDisplay');
   menuDisplay.innerHTML = ''; // Clear existing content
 
-  items.forEach((item, index) => {
-    // Create menu item element
+  items.forEach((item) => {
     const itemDiv = document.createElement('div');
     itemDiv.className = 'menu-item';
-    itemDiv.style.cssText = `
-      padding: 10px;
-      background: #f8f9fa;
-      margin: 5px 0;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background 0.2s;
-    `;
 
-    // Add hover effects
-    itemDiv.addEventListener('mouseenter', function() {
-      this.style.background = '#e9ecef';
-    });
-    itemDiv.addEventListener('mouseleave', function() {
-      this.style.background = '#f8f9fa';
-    });
+    // Create item name
+    const itemName = document.createElement('div');
+    itemName.className = 'item-name';
+    itemName.textContent = item.name;
 
-    // Add click handler
-    itemDiv.addEventListener('click', function() {
-      console.log('Item clicked:', item.name);
-      orderItem(item.name, item.emoji);
-    });
+    // Create item description
+    const itemDesc = document.createElement('div');
+    itemDesc.className = 'item-description';
+    itemDesc.textContent = item.description || 'A delightful cafe item';
 
-    // Create content
-    itemDiv.innerHTML = `
-      <span style="font-size: 24px;">${item.emoji}</span>
-      <span style="margin-left: 10px; font-weight: bold;">${item.name}</span>
-      <span style="float: right; color: #6441a5; font-size: 14px;">Click to order →</span>
-    `;
+    // Create order button
+    const orderBtn = document.createElement('button');
+    orderBtn.className = 'order-button';
+    orderBtn.textContent = 'ORDER';
+    orderBtn.addEventListener('click', () => orderItem(item.name, item.description));
+
+    itemDiv.appendChild(itemName);
+    itemDiv.appendChild(itemDesc);
+    itemDiv.appendChild(orderBtn);
 
     menuDisplay.appendChild(itemDiv);
   });
@@ -127,19 +129,133 @@ function displayMenuItems(items) {
   document.getElementById('itemCount').textContent = `${items.length} items available`;
 }
 
-async function orderItem(itemName, emoji) {
+// Check if viewer is on cooldown
+function checkCooldown() {
+  const cooldownKey = `cat_cafe_cooldown_${twitchAuth.channelId}`;
+  const lastOrderTime = localStorage.getItem(cooldownKey);
+
+  if (lastOrderTime) {
+    const elapsedTime = Date.now() - parseInt(lastOrderTime);
+    const remainingTime = COOLDOWN_DURATION - elapsedTime;
+
+    if (remainingTime > 0) {
+      // Still on cooldown
+      disableOrdering(remainingTime);
+    }
+    else {
+      // Cooldown expired, clear it
+      localStorage.removeItem(cooldownKey);
+    }
+  }
+}
+
+// Disable ordering and show cooldown timer
+function disableOrdering(remainingTime) {
+  // Disable all order buttons
+  const orderButtons = document.querySelectorAll('.order-button');
+  orderButtons.forEach(btn => {
+    btn.disabled = true;
+    btn.textContent = 'ON COOLDOWN';
+  });
+
+  // Add disabled class to menu items
+  const menuItems = document.querySelectorAll('.menu-item');
+  menuItems.forEach(item => item.classList.add('disabled'));
+
+  // Show cooldown display
+  const cooldownDisplay = document.getElementById('cooldownDisplay');
+  cooldownDisplay.innerHTML = `
+    <div class="cooldown-info">
+      Cooldown: <span id="cooldownTime">Calculating...</span>
+    </div>
+  `;
+
+  // Update cooldown timer
+  updateCooldownTimer(remainingTime);
+}
+
+// Update cooldown timer display
+function updateCooldownTimer(remainingTime) {
+  const cooldownTimeSpan = document.getElementById('cooldownTime');
+  
+  // Clear existing timer if any
+  if (cooldownTimer) {
+    clearInterval(cooldownTimer);
+  }
+
+  // Update timer every second
+  cooldownTimer = setInterval(() => {
+    remainingTime -= 1000;
+
+    if (remainingTime <= 0) {
+      // Cooldown expired
+      clearInterval(cooldownTimer);
+      enableOrdering();
+    }
+    else {
+      // Update display
+      const minutes = Math.floor(remainingTime / 60000);
+      const seconds = Math.floor((remainingTime % 60000) / 1000);
+      cooldownTimeSpan.textContent = `${minutes}m ${seconds}s`;
+    }
+  }, 1000);
+
+  // Set initial display
+  const minutes = Math.floor(remainingTime / 60000);
+  const seconds = Math.floor((remainingTime % 60000) / 1000);
+  cooldownTimeSpan.textContent = `${minutes}m ${seconds}s`;
+}
+
+// Re-enable ordering after cooldown
+function enableOrdering() {
+  console.log('✅ Cooldown expired, re-enabling ordering');
+
+  // Remove cooldown from localStorage
+  const cooldownKey = `cat_cafe_cooldown_${twitchAuth.channelId}`;
+  localStorage.removeItem(cooldownKey);
+
+  // Re-enable all order buttons
+  const orderButtons = document.querySelectorAll('.order-button');
+  orderButtons.forEach(btn => {
+    btn.disabled = false;
+    btn.textContent = 'ORDER';
+  });
+
+  // Remove disabled class from menu items
+  const menuItems = document.querySelectorAll('.menu-item');
+  menuItems.forEach(item => item.classList.remove('disabled'));
+
+  // Hide cooldown display
+  const cooldownDisplay = document.getElementById('cooldownDisplay');
+  cooldownDisplay.innerHTML = '';
+
+  showNotification('✅ You can order again!', 'success');
+}
+
+async function orderItem(itemName, itemDescription) {
   if (!twitchAuth) {
-    alert('❌ Not authorized. Please refresh the page.');
+    showNotification('❌ Not authorized. Please refresh the page.', 'error');
     return;
+  }
+
+  // Check cooldown before ordering
+  const cooldownKey = `cat_cafe_cooldown_${twitchAuth.channelId}`;
+  const lastOrderTime = localStorage.getItem(cooldownKey);
+
+  if (lastOrderTime) {
+    const elapsedTime = Date.now() - parseInt(lastOrderTime);
+    const remainingTime = COOLDOWN_DURATION - elapsedTime;
+
+    if (remainingTime > 0) {
+      const minutes = Math.floor(remainingTime / 60000);
+      const seconds = Math.floor((remainingTime % 60000) / 1000);
+      showNotification(`⏳ Wait ${minutes}m ${seconds}s before ordering again`, 'warning');
+      return;
+    }
   }
 
   console.log(`📤 Ordering: ${itemName}`);
   console.log('👤 Using username:', viewerDisplayName);
-
-  // Show loading state
-  const menuDisplay = document.getElementById('menuDisplay');
-  const originalHTML = menuDisplay.innerHTML;
-  menuDisplay.innerHTML = '<p style="color: #6441a5;">⏳ Sending order...</p>';
 
   try {
     console.log('Making request to:', `${BACKEND_URL}/api/order`);
@@ -159,32 +275,27 @@ async function orderItem(itemName, emoji) {
     const data = await response.json();
     console.log('📥 Response:', response.status, data);
 
-    // Restore menu
-    menuDisplay.innerHTML = originalHTML;
-
-    // Re-attach event listeners after restoring HTML
-    loadConfig();
-
     if (response.ok) {
-      // Success!
-      showNotification(`✅ ${emoji} ${itemName} ordered successfully!`, 'success');
-    } else if (response.status === 429) {
-      // Rate limited
-      const seconds = data.remainingTime || 300;
-      const minutes = Math.floor(seconds / 60);
-      showNotification(`⏳ Please wait ${minutes}m ${seconds % 60}s before ordering again`, 'warning');
-    } else if (response.status === 401) {
+      // Success! Set cooldown
+      localStorage.setItem(cooldownKey, Date.now().toString());
+      
+      showNotification(`✅ ${itemName} ordered successfully!`, 'success');
+      
+      // Start cooldown timer
+      disableOrdering(COOLDOWN_DURATION);
+    }
+    else if (response.status === 401) {
       // Unauthorized
       showNotification(`❌ Authorization failed: ${data.details || data.error}`, 'error');
-    } else {
+    }
+    else {
       // Other error
       showNotification(`❌ Failed to order: ${data.error || 'Unknown error'}`, 'error');
     }
 
-  } catch (error) {
+  }
+  catch (error) {
     console.error('💥 Order failed:', error);
-    menuDisplay.innerHTML = originalHTML;
-    loadConfig(); // Re-attach event listeners
     showNotification(`❌ Network error: ${error.message}`, 'error');
   }
 }
@@ -192,39 +303,9 @@ async function orderItem(itemName, emoji) {
 function showNotification(message, type = 'info') {
   // Create notification element
   const notification = document.createElement('div');
-  notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 15px 20px;
-    border-radius: 8px;
-    font-weight: bold;
-    z-index: 9999;
-    animation: slideIn 0.3s ease;
-    max-width: 300px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  `;
-
-  // Set colors based on type
-  if (type === 'success') {
-    notification.style.background = '#d4edda';
-    notification.style.color = '#155724';
-    notification.style.border = '1px solid #c3e6cb';
-  } else if (type === 'error') {
-    notification.style.background = '#f8d7da';
-    notification.style.color = '#721c24';
-    notification.style.border = '1px solid #f5c6cb';
-  } else if (type === 'warning') {
-    notification.style.background = '#fff3cd';
-    notification.style.color = '#856404';
-    notification.style.border = '1px solid #ffeeba';
-  } else {
-    notification.style.background = '#d1ecf1';
-    notification.style.color = '#0c5460';
-    notification.style.border = '1px solid #bee5eb';
-  }
-
+  notification.className = `notification ${type}`;
   notification.textContent = message;
+
   document.body.appendChild(notification);
 
   // Auto-remove after 4 seconds
@@ -238,36 +319,12 @@ function showNotification(message, type = 'info') {
   }, 4000);
 }
 
-// Add CSS animation
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes slideIn {
-    from {
-      transform: translateX(400px);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-  @keyframes slideOut {
-    from {
-      transform: translateX(0);
-      opacity: 1;
-    }
-    to {
-      transform: translateX(400px);
-      opacity: 0;
-    }
-  }
-`;
-document.head.appendChild(style);
-
+// Listen for config changes
 window.Twitch.ext.configuration.onChanged(() => {
   console.log('Config changed! Reloading...');
   loadConfig();
 });
 
 console.log('🐱 Cat Cafe Panel ready!');
-console.log('Backend URL:', BACKEND_URL);
+//console.log('Backend URL:', BACKEND_URL);
+//console.log('Cooldown Duration:', COOLDOWN_DURATION / 60000, 'minutes');

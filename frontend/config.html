@@ -1,88 +1,323 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Configuration</title>
+    <title>Cat Cafe Configuration</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial;
-            padding: 20px;
-            background: #f0f0f0;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        body {
+            /* Modern pastel background for config */
+            background: linear-gradient(135deg, #fde2e4, #fad2e1);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 30px 20px;
+            min-height: 100vh;
+        }
+
         .container {
+            max-width: 700px;
+            margin: 0 auto;
             background: white;
-            padding: 20px;
-            border-radius: 8px;
-            max-width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(125, 90, 107, 0.15);
+            overflow: hidden;
         }
-        h2 { color: #6441a5; margin-top: 0; }
-        .input-group {
-            display: flex;
-            gap: 10px;
+
+        .header {
+            background: linear-gradient(135deg, #fad2e1, #f5c2d6);
+            padding: 30px;
+            text-align: center;
+            border-bottom: 4px solid #d4a5bc;
+        }
+
+        .header h1 {
+            color: #7d5a6b;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #9d7689;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            background: #fef6f8;
+            border: 2px solid #f5c2d6;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            color: #7d5a6b;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f5c2d6;
+        }
+
+        .form-group {
             margin-bottom: 20px;
         }
-        input {
-            flex: 1;
-            padding: 10px;
-            font-size: 16px;
-            box-sizing: border-box;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+
+        .form-label {
+            display: block;
+            color: #7d5a6b;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
-        button {
-            background: #6441a5;
-            color: white;
-            padding: 10px 20px;
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            border: 2px solid #e8d4dc;
+            border-radius: 6px;
+            background: white;
+            color: #5a4451;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #d4a5bc;
+            background: #fffbfc;
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        .form-help {
+            font-size: 12px;
+            color: #9d7689;
+            margin-top: 6px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 16px;
+            transition: all 0.2s ease;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        button:hover { background: #7d5bbe; }
-        #status {
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f5c2d6, #fad2e1);
+            color: #7d5a6b;
+            box-shadow: 0 2px 8px rgba(250, 210, 225, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #fad2e1, #ffdeeb);
+            box-shadow: 0 4px 12px rgba(250, 210, 225, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-add {
+            width: 100%;
             margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
         }
-        .success { background: #d4edda; color: #155724; }
-        .error { background: #f8d7da; color: #721c24; }
-        #menuItemsList {
-            margin: 20px 0;
-            max-height: 300px;
-            overflow-y: auto;
+
+        .btn-danger {
+            background: #ff9999;
+            color: #661111;
+            padding: 8px 16px;
+            font-size: 12px;
         }
-        .section {
-            margin: 20px 0;
+
+        .btn-danger:hover {
+            background: #ff7777;
+        }
+
+        .menu-items-list {
+            margin-top: 20px;
+        }
+
+        .menu-item-entry {
+            background: white;
+            border: 2px solid #f5c2d6;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .menu-item-entry:hover {
+            border-color: #d4a5bc;
+            box-shadow: 0 2px 8px rgba(212, 165, 188, 0.15);
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-info-name {
+            color: #7d5a6b;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .item-info-desc {
+            color: #9d7689;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9d7689;
+            font-size: 14px;
+        }
+
+        .save-button {
+            width: 100%;
+            padding: 18px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        #status {
+            margin-top: 20px;
             padding: 15px;
-            background: #f8f9fa;
-            border-radius: 4px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            animation: fadeIn 0.3s ease;
+        }
+
+        #status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        #status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #fef6f8;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #f5c2d6;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d4a5bc;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>🐱 Cat Cafe Configuration</h2>
-
-    <div class="section">
-        <h3>Add Menu Items</h3>
-        <div class="input-group">
-            <input id="itemName" placeholder="Item name (e.g., Green Tea)">
-            <input id="itemEmoji" placeholder="Emoji (e.g., ☕)" style="max-width: 100px;">
-            <button id="addItemButton">Add Item</button>
-        </div>
+    <div class="header">
+        <h1>🐱 Cat Cafe Configuration</h1>
+        <p>Manage your cafe menu items</p>
     </div>
 
-    <div class="section">
-        <h3>Current Menu Items</h3>
-        <div id="menuItemsList">
-            <p style="color: #999;">No items added yet.</p>
+    <div class="content">
+        <!-- Add Menu Item Section -->
+        <div class="section">
+            <div class="section-title">Add Menu Item</div>
+            
+            <div class="form-group">
+                <label class="form-label">Item Name</label>
+                <input 
+                    type="text" 
+                    id="itemName" 
+                    class="form-input" 
+                    placeholder="e.g., Green Tea, Matcha Latte, Strawberry Cake"
+                    maxlength="50"
+                >
+                <div class="form-help">Short, descriptive name for your menu item</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea 
+                    id="itemDescription" 
+                    class="form-textarea" 
+                    placeholder="e.g., A relaxing cup of green tea"
+                    maxlength="150"
+                ></textarea>
+                <div class="form-help">Brief description shown to viewers (max 150 characters)</div>
+            </div>
+
+            <button id="addItemButton" class="btn btn-primary btn-add">
+                + Add Item to Menu
+            </button>
         </div>
+
+        <!-- Current Menu Items Section -->
+        <div class="section">
+            <div class="section-title">Current Menu Items</div>
+            <div id="menuItemsList">
+                <div class="empty-state">
+                    No items added yet. Add your first menu item above!
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <button id="saveButton" class="btn btn-primary save-button">
+            💾 Save All Changes
+        </button>
+
+        <div id="status"></div>
     </div>
-
-    <button id="saveButton" style="width: 100%; font-size: 18px; padding: 15px;">💾 Save All Menu Items</button>
-
-    <div id="status"></div>
 </div>
 
 <script src="config.js"></script>
