@@ -38,12 +38,20 @@ export default async function handler(req, res) {
       });
     }
 
-    const { channelId, userId, opaqueUserId, role, isUnlinked } = extractChannelInfo(jwtPayload);
+    const { channelId, userId, opaqueUserId, isUnlinked } = extractChannelInfo(jwtPayload);
+
+    if (!userId || userId.startsWith('U') || userId.startsWith('A')) {
+      return res.status(403).json({
+        error: "Identity link required",
+        details: "You must link your Twitch account to place orders"
+      });
+    }
 
     console.log('Authenticated request:');
     console.log('Channel ID:', channelId);
-    console.log('User ID:', userId || opaqueUserId);
-    console.log('Role:', role);
+    console.log('User ID:', userId);
+    console.log('Opaque ID:', opaqueUserId);
+    console.log('Account linked?', !isUnlinked);
 
     /*
     ===================================================

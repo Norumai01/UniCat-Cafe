@@ -11,21 +11,32 @@ let cooldownTimer = null;
 
 window.Twitch.ext.onAuthorized(async (auth) => {
   console.log('✅ Authorized!');
+  // DON'T UNCOMMENT BELOW IN PRODUCTION - exposes sensitive information.
   // console.log('✅ Authorized!', auth);
   // console.log('Channel ID:', auth.channelId);
   // console.log('User ID:', auth.userId);
-
+  // console.log('Opaque ID:', window.Twitch.ext.viewer.opaqueId);
+  // console.log('Viewer ID:', window.Twitch.ext.viewer.id);
+  // console.log('Is Linked:', window.Twitch.ext.viewer.isLinked);
   twitchAuth = auth;
 
-  // Fetch viewer's display name if they're logged in
-  if (!window.Twitch.ext.viewer.isLinked) {
-    console.log('👤 Viewer not linked, using "Viewer"');
-    viewerDisplayName = 'Viewer';
-  }
-  else {
-    await fetchViewerName(auth);
+  // Check if user has a twitch account
+  if (window.Twitch.ext.viewer.opaqueId.startsWith('A')) {
+    console.log('🚫 User not logged in');
+    showLoginRequired();
+    return;
   }
 
+  // Check if twitch account is linked, otherwise get permissions to share user id.
+  // Note: Broadcaster ID are linked by default to the extension installed on their channel.
+  if (!window.Twitch.ext.viewer.isLinked) {
+    console.log('🔒 User logged in but identity not linked');
+    showIdentityRequired();
+    return;
+  }
+
+  console.log('✅ User linked');
+  await fetchViewerName(auth);
   loadConfig();
   checkCooldown(); // Check if user is on cooldown
 });
@@ -43,8 +54,7 @@ async function fetchViewerName(auth) {
     });
 
     if (!response.ok) {
-      console.log('⚠️ Could not fetch username, using "Viewer"');
-      viewerDisplayName = 'Viewer';
+      console.log('⚠️ Could not fetch username, returning...');
       return;
     }
 
@@ -60,24 +70,64 @@ async function fetchViewerName(auth) {
       console.log("Viewer name fetched successfully!");
     }
     else {
-      console.log('⚠️ No display name found, using "Viewer"');
-      viewerDisplayName = 'Viewer';
+      console.log('⚠️ No display name found');
     }
   }
   catch (error) {
     console.error('❌ Error fetching viewer name:', error);
-    viewerDisplayName = 'Viewer';
   }
+}
+
+// Show message for logged-out users
+function showLoginRequired() {
+  const container = document.querySelector('.container');
+  container.innerHTML = `
+    <div class="auth-required">
+      <div class="auth-icon">🐱</div>
+      <div class="auth-title">Login Required</div>
+      <div class="auth-message">
+        Please log in to Twitch to order from the Cat Cafe!
+      </div>
+      <div class="auth-note">
+        Only Twitch users can place orders 😊
+      </div>
+    </div>
+  `;
+}
+
+// Show message for logged-in users who haven't linked identity
+function showIdentityRequired() {
+  const container = document.querySelector('.container');
+  container.innerHTML = `
+    <div class="auth-required">
+      <div class="auth-icon">🐱</div>
+      <div class="auth-title">Link Your Account</div>
+      <div class="auth-message">
+        To order from the Cat Cafe, we need to know who you are!
+      </div>
+      <button id="link-identity-btn" class="auth-button">
+        Link Twitch Account
+      </button>
+      <div class="auth-note">
+        This lets us personalize your orders in chat 😊
+      </div>
+    </div>
+  `;
+
+  document.getElementById('link-identity-btn').addEventListener('click', () => {
+    console.log('Requesting identity share...');
+    window.Twitch.ext.actions.requestIdShare();
+  });
 }
 
 function loadConfig() {
   console.log('Loading config...');
   const config = window.Twitch.ext.configuration.broadcaster;
-  console.log('Config object:', config);
+  // console.log('Config object:', config);
 
   if (config && config.content) {
     const data = JSON.parse(config.content);
-    console.log('Parsed data:', data);
+    // console.log('Parsed data:', data);
 
     if (data.menuItems && data.menuItems.length > 0) {
       menuItems = data.menuItems;
@@ -117,7 +167,7 @@ function displayMenuItems(items) {
     const orderBtn = document.createElement('button');
     orderBtn.className = 'order-button';
     orderBtn.textContent = 'ORDER';
-    orderBtn.addEventListener('click', () => orderItem(item.name, item.description));
+    orderBtn.addEventListener('click', () => orderItem(item.name));
 
     itemDiv.appendChild(itemName);
     itemDiv.appendChild(itemDesc);
@@ -177,7 +227,7 @@ function disableOrdering(remainingTime) {
 // Update cooldown timer display
 function updateCooldownTimer(remainingTime) {
   const cooldownTimeSpan = document.getElementById('cooldownTime');
-  
+
   // Clear existing timer if any
   if (cooldownTimer) {
     clearInterval(cooldownTimer);
@@ -232,7 +282,7 @@ function enableOrdering() {
   showNotification('✅ You can order again!', 'success');
 }
 
-async function orderItem(itemName, itemDescription) {
+async function orderItem(itemName) {
   if (!twitchAuth) {
     showNotification('❌ Not authorized. Please refresh the page.', 'error');
     return;
@@ -254,11 +304,12 @@ async function orderItem(itemName, itemDescription) {
     }
   }
 
-  console.log(`📤 Ordering: ${itemName}`);
-  console.log('👤 Using username:', viewerDisplayName);
+  // console.log(`📤 Ordering: ${itemName}`);
+  // console.log('👤 Using username:', viewerDisplayName);
 
   try {
-    console.log('Making request to:', `${BACKEND_URL}/api/order`);
+    console.log(`Placing order ${itemName} for ${viewerDisplayName}...`);
+    // console.log(`Making request to: ${BACKEND_URL}/api/order`)
 
     const response = await fetch(`${BACKEND_URL}/api/order`, {
       method: 'POST',
@@ -273,14 +324,16 @@ async function orderItem(itemName, itemDescription) {
     });
 
     const data = await response.json();
-    console.log('📥 Response:', response.status, data);
+    // console.log('📥 Response:', response.status, data);
 
     if (response.ok) {
+      console.log(`✅ Order placed successfully.`);
+
       // Success! Set cooldown
       localStorage.setItem(cooldownKey, Date.now().toString());
-      
+
       showNotification(`✅ ${itemName} ordered successfully!`, 'success');
-      
+
       // Start cooldown timer
       disableOrdering(COOLDOWN_DURATION);
     }
