@@ -97,4 +97,4 @@ node_modules
 .DS_Store
 Thumbs.db
 /frontend/extension.zip
-/frontend/panel.js
+/frontend/utils/api.js
