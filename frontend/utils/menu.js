@@ -1,5 +1,11 @@
 console.log('📋 Menu utility loaded');
 
+// Hardcoded categories
+const CATEGORIES = ['Food', 'Drink', 'Sub Combo'];
+let currentCategory = 'Food'; // Default category - will be updated to first non-empty category
+let isOnCooldown = false; // Track if user is currently on cooldown
+let cooldownIntervalId = null; // Track the cooldown timer interval
+
 /**
  * Loads menu configuration from Twitch Configuration Service
  * @returns {Array|null} Array of menu items or null if not configured
@@ -7,32 +13,152 @@ console.log('📋 Menu utility loaded');
 function loadMenuConfig() {
   console.log('Loading config...');
   const config = window.Twitch.ext.configuration.broadcaster;
-  // console.log('Config object:', config);
 
   if (config && config.content) {
     const data = JSON.parse(config.content);
-    // console.log('Parsed data:', data);
+    // console.log('📦 Config loaded:', data.menuItems?.length || 0, 'items');
 
     if (data.menuItems && data.menuItems.length > 0) {
       return data.menuItems;
     }
   }
-  
+
   return null;
 }
 
 /**
- * Displays menu items in the UI
+ * Groups menu items by category
  * @param {Array} items - Array of menu item objects
+ * @returns {Object} Items grouped by category
+ */
+function groupItemsByCategory(items) {
+  const grouped = {
+    'Food': [],
+    'Drink': [],
+    'Sub Combo': []
+  };
+
+  items.forEach(item => {
+    const category = item.category || 'Food'; // Default to Food if no category
+    if (grouped[category]) {
+      grouped[category].push(item);
+    }
+  });
+
+  // console.log('📊 Items by category:', {
+  //   Food: grouped['Food'].length,
+  //   Drink: grouped['Drink'].length,
+  //   'Sub Combo': grouped['Sub Combo'].length
+  // });
+
+  return grouped;
+}
+
+/**
+ * Finds the first non-empty category to use as default
+ * @param {Object} groupedItems - Items grouped by category
+ * @returns {string} First category with items, or 'Food' as fallback
+ */
+function findDefaultCategory(groupedItems) {
+  // Check each category in order
+  for (const category of CATEGORIES) {
+    if (groupedItems[category] && groupedItems[category].length > 0) {
+      // console.log(`🎯 Default category set to: ${category}`);
+      return category;
+    }
+  }
+
+  // Fallback to Food if all categories are empty (shouldn't happen)
+  console.log('🎯 Default category: Food (fallback)');
+  return 'Food';
+}
+
+/**
+ * Displays category tabs
+ * @param {Object} groupedItems - Items grouped by category
+ * @param {Function} onTabClick - Callback when tab is clicked
+ */
+function displayCategoryTabs(groupedItems, onTabClick) {
+  const tabsContainer = document.getElementById('categoryTabs');
+
+  if (!tabsContainer) {
+    console.error('❌ Category tabs container not found!');
+    return;
+  }
+
+  tabsContainer.innerHTML = '';
+
+  // Set default category to first non-empty category
+  currentCategory = findDefaultCategory(groupedItems);
+
+  CATEGORIES.forEach(category => {
+    const itemCount = groupedItems[category].length;
+
+    const tab = document.createElement('button');
+    tab.className = 'category-tab';
+    tab.setAttribute('data-category', category);
+
+    // Add active class to current category
+    if (category === currentCategory) {
+      tab.classList.add('active');
+    }
+
+    // Create tab content with category name and count
+    const tabText = document.createElement('div');
+    tabText.className = 'tab-text';
+    tabText.textContent = category;
+
+    const tabCount = document.createElement('div');
+    tabCount.className = 'tab-count';
+    tabCount.textContent = `(${itemCount})`;
+
+    tab.appendChild(tabText);
+    tab.appendChild(tabCount);
+
+    tab.addEventListener('click', () => onTabClick(category));
+
+    tabsContainer.appendChild(tab);
+  });
+
+  console.log('✅ Category tabs displayed');
+}
+
+/**
+ * Displays menu items for the current category
+ * @param {Array} items - Array of menu item objects for current category
  * @param {Function} onOrderClick - Callback function when order button is clicked
  */
 function displayMenuItems(items, onOrderClick) {
   const menuDisplay = document.getElementById('menuDisplay');
+
+  if (!menuDisplay) {
+    console.error('❌ Menu display container not found!');
+    return;
+  }
+
   menuDisplay.innerHTML = ''; // Clear existing content
+
+  // console.log(`📋 Displaying ${items.length} items in current category`);
+
+  if (items.length === 0) {
+    menuDisplay.innerHTML = `
+      <div class="empty-category">
+        <!--    TODO: Replace empty icon here with official assets.    -->
+        <div class="empty-icon">🍃</div> 
+        <div class="empty-text">No items in this category yet</div>
+      </div>
+    `;
+    return;
+  }
 
   items.forEach((item, index) => {
     const itemDiv = document.createElement('div');
     itemDiv.className = 'menu-item';
+
+    // Apply disabled class if on cooldown
+    if (isOnCooldown) {
+      itemDiv.classList.add('disabled');
+    }
 
     // Create header with name and info toggle
     const headerDiv = document.createElement('div');
@@ -59,12 +185,13 @@ function displayMenuItems(items, onOrderClick) {
     // Create order button
     const orderBtn = document.createElement('button');
     orderBtn.className = 'order-button';
-    orderBtn.textContent = 'ORDER';
+    orderBtn.textContent = isOnCooldown ? 'ON COOLDOWN' : 'ORDER';
+    orderBtn.disabled = isOnCooldown;
     orderBtn.addEventListener('click', () => onOrderClick(item.name));
 
     // Add toggle functionality
     infoToggle.addEventListener('click', (e) => {
-      e.stopPropagation(); // Prevent any parent handlers
+      e.stopPropagation();
       const desc = itemDesc;
       const isHidden = desc.classList.contains('hidden');
 
@@ -84,8 +211,41 @@ function displayMenuItems(items, onOrderClick) {
 
     menuDisplay.appendChild(itemDiv);
   });
+}
 
-  document.getElementById('itemCount').textContent = `${items.length} items available`;
+/**
+ * Updates the item count display
+ * @param {number} totalItems - Total number of items across all categories
+ * @param {number} categoryItems - Number of items in current category
+ */
+function updateItemCount(totalItems, categoryItems) {
+  const itemCountElement = document.getElementById('itemCount');
+
+  if (!itemCountElement) {
+    console.error('❌ Item count element not found!');
+    return;
+  }
+
+  itemCountElement.textContent = categoryItems === totalItems
+    ? `${totalItems} items available`
+    : `${categoryItems} of ${totalItems} items`;
+}
+
+/**
+ * Switches to a different category
+ * @param {string} category - Category name to switch to
+ */
+function setCurrentCategory(category) {
+  // console.log(`📂 Setting current category to: ${category}`);
+  currentCategory = category;
+}
+
+/**
+ * Gets the current category
+ * @returns {string} Current category name
+ */
+function getCurrentCategory() {
+  return currentCategory;
 }
 
 /**
@@ -95,6 +255,9 @@ function displayMenuItems(items, onOrderClick) {
  * @returns {number} Interval ID for the cooldown timer
  */
 function disableOrdering(remainingTime, onCooldownEnd) {
+  // Set cooldown state flag
+  isOnCooldown = true;
+
   // Disable all order buttons
   const orderButtons = document.querySelectorAll('.order-button');
   orderButtons.forEach(btn => {
@@ -114,8 +277,15 @@ function disableOrdering(remainingTime, onCooldownEnd) {
     </div>
   `;
 
-  // Update cooldown timer
-  return updateCooldownTimer(remainingTime, onCooldownEnd);
+  // Clear any existing interval
+  if (cooldownIntervalId) {
+    clearInterval(cooldownIntervalId);
+  }
+
+  // Update cooldown timer and store the interval ID
+  cooldownIntervalId = updateCooldownTimer(remainingTime, onCooldownEnd);
+
+  return cooldownIntervalId;
 }
 
 /**
@@ -135,18 +305,23 @@ function updateCooldownTimer(remainingTime, onCooldownEnd) {
       // Cooldown expired
       clearInterval(intervalId);
       onCooldownEnd();
-    } else {
+    }
+    else {
       // Update display
       const minutes = Math.floor(remainingTime / 60000);
       const seconds = Math.floor((remainingTime % 60000) / 1000);
-      cooldownTimeSpan.textContent = `${minutes}m ${seconds}s`;
+      if (cooldownTimeSpan) {
+        cooldownTimeSpan.textContent = `${minutes}m ${seconds}s`;
+      }
     }
   }, 1000);
 
   // Set initial display
   const minutes = Math.floor(remainingTime / 60000);
   const seconds = Math.floor((remainingTime % 60000) / 1000);
-  cooldownTimeSpan.textContent = `${minutes}m ${seconds}s`;
+  if (cooldownTimeSpan) {
+    cooldownTimeSpan.textContent = `${minutes}m ${seconds}s`;
+  }
 
   return intervalId;
 }
@@ -156,6 +331,15 @@ function updateCooldownTimer(remainingTime, onCooldownEnd) {
  */
 function enableOrdering() {
   console.log('✅ Cooldown expired, re-enabling ordering');
+
+  // Clear cooldown state flag
+  isOnCooldown = false;
+
+  // Clear interval if it exists
+  if (cooldownIntervalId) {
+    clearInterval(cooldownIntervalId);
+    cooldownIntervalId = null;
+  }
 
   // Re-enable all order buttons
   const orderButtons = document.querySelectorAll('.order-button');
@@ -171,4 +355,12 @@ function enableOrdering() {
   // Hide cooldown display
   const cooldownDisplay = document.getElementById('cooldownDisplay');
   cooldownDisplay.innerHTML = '';
+}
+
+/**
+ * Gets the current cooldown state
+ * @returns {boolean} True if currently on cooldown
+ */
+function getIsOnCooldown() {
+  return isOnCooldown;
 }

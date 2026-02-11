@@ -2,7 +2,8 @@ console.log('🐱 Cat Cafe Panel script loaded');
 
 // Global state
 let twitchAuth = null;
-let menuItems = [];
+let allMenuItems = [];
+let groupedMenuItems = {};
 let viewerDisplayName = 'Viewer'; // Default fallback
 let cooldownTimer = null;
 
@@ -49,17 +50,52 @@ window.Twitch.ext.onAuthorized(async (auth) => {
 
 // Load menu configuration and display it
 function loadAndDisplayMenu() {
-  menuItems = loadMenuConfig();
-  
-  if (menuItems && menuItems.length > 0) {
-    displayMenuItems(menuItems, handleOrderClick);
+  allMenuItems = loadMenuConfig();
+
+  if (allMenuItems && allMenuItems.length > 0) {
+    // Group items by category
+    groupedMenuItems = groupItemsByCategory(allMenuItems);
+
+    // Display category tabs
+    displayCategoryTabs(groupedMenuItems, handleTabClick);
+
+    // Display items for current category
+    const currentCategory = getCurrentCategory();
+    displayMenuItems(groupedMenuItems[currentCategory], handleOrderClick);
+
+    // Update item count
+    updateItemCount(allMenuItems.length, groupedMenuItems[currentCategory].length);
   }
-  else if (menuItems === null) {
+  else if (allMenuItems === null) {
     showError('Streamer needs to configure menu items!');
   }
   else {
     showError('No menu items configured yet.');
   }
+}
+
+// Handle tab clicks
+function handleTabClick(category) {
+  // console.log(`Switching to category: ${category}`);
+
+  // Update current category
+  setCurrentCategory(category);
+
+  // Update tab active states
+  const tabs = document.querySelectorAll('.category-tab');
+  tabs.forEach(tab => {
+    if (tab.getAttribute('data-category') === category) {
+      tab.classList.add('active');
+    } else {
+      tab.classList.remove('active');
+    }
+  });
+
+  // Display items for new category
+  displayMenuItems(groupedMenuItems[category], handleOrderClick);
+
+  // Update item count
+  updateItemCount(allMenuItems.length, groupedMenuItems[category].length);
 }
 
 // Check if user is on cooldown when panel loads
