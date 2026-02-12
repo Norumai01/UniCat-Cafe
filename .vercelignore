@@ -97,3 +97,9 @@ Thumbs.db
 
 # Frontend files
 frontend
+
+# Other files
+docs
+assets
+scripts
+LICENSE
