@@ -24,7 +24,7 @@ export async function getCategoryMessages(clientId, channelId) {
     console.log('Client ID:', clientId);
 
     // Create signed JWT for extension API (uses EXTENSION_SECRET)
-    const extensionJwt = createExtensionJWT(channelId);
+    const extensionJwt = createExtensionJWT();
     console.log('Created Extension JWT (first 20 chars):', extensionJwt.substring(0, 20) + '...');
 
     const url = `https://api.twitch.tv/helix/extensions/configurations?extension_id=${process.env.EXTENSION_ID}&segment=broadcaster&broadcaster_id=${channelId}`;

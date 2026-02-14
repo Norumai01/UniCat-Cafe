@@ -76,14 +76,18 @@ export function extractChannelInfo(payload) {
  * This is used when YOUR backend needs to call Twitch Extension APIs
  * (different from verifyJWT which verifies tokens FROM Twitch)
  *
- * @param {string} channelId - Broadcaster's channel ID
  * @returns {string} Signed JWT token
  */
-export function createExtensionJWT(channelId) {
+export function createExtensionJWT() {
   const EXTENSION_SECRET = process.env.EXTENSION_SECRET;
+  const EXTENSION_OWNER_ID = process.env.OWNER_USER_ID; // Your Twitch user ID (extension owner)
 
   if (!EXTENSION_SECRET) {
     throw new Error('EXTENSION_SECRET not configured');
+  }
+
+  if (!EXTENSION_OWNER_ID) {
+    throw new Error('OWNER_USER_ID not configured');
   }
 
   // Secret must be decoded from base64
@@ -91,7 +95,7 @@ export function createExtensionJWT(channelId) {
 
   const payload = {
     exp: Math.floor(Date.now() / 1000) + 60, // Expires in 60 seconds
-    user_id: channelId, // Broadcaster's user ID
+    user_id: EXTENSION_OWNER_ID, // Extension owner's user ID (YOU, not the broadcaster)
     role: 'external' // Required for Extension Configuration API
   };
 
