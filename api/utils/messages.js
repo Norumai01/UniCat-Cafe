@@ -52,11 +52,11 @@ export async function getCategoryMessages(channelId) {
       // console.log('Config content:', configData.data[0].content);
 
       const config = JSON.parse(configData.data[0].content);
-      // console.log('Parsed config:', JSON.stringify(config, null, 2));
+      console.log('Parsed config:', JSON.stringify(config, null, 2));
 
       if (config.categoryMessages) {
         console.log('✅ Using custom category messages from config');
-        // console.log('Custom messages:', JSON.stringify(config.categoryMessages, null, 2));
+        console.log('Custom messages:', JSON.stringify(config.categoryMessages, null, 2));
         return config.categoryMessages;
       }
     }
