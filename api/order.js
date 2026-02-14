@@ -122,7 +122,7 @@ export default async function handler(req, res) {
     4. GET CATEGORY MESSAGES & FORMAT MESSAGE
     ===================================================
     */
-    const categoryMessages = await getCategoryMessages(CLIENT_ID, channelId);
+    const categoryMessages = await getCategoryMessages(channelId);
     const message = formatMessage(categoryMessages, category, username, item);
 
     /*
