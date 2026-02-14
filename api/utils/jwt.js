@@ -71,6 +71,35 @@ export function extractChannelInfo(payload) {
 }
 
 /**
+ * Create a signed JWT for making Extension API requests
+ *
+ * This is used when YOUR backend needs to call Twitch Extension APIs
+ * (different from verifyJWT which verifies tokens FROM Twitch)
+ *
+ * @param {string} channelId - Broadcaster's channel ID
+ * @returns {string} Signed JWT token
+ */
+export function createExtensionJWT(channelId) {
+  const EXTENSION_SECRET = process.env.EXTENSION_SECRET;
+
+  if (!EXTENSION_SECRET) {
+    throw new Error('EXTENSION_SECRET not configured');
+  }
+
+  // Secret must be decoded from base64
+  const secret = Buffer.from(EXTENSION_SECRET, 'base64');
+
+  const payload = {
+    exp: Math.floor(Date.now() / 1000) + 60, // Expires in 60 seconds
+    user_id: channelId, // Broadcaster's user ID
+    role: 'external' // Required for Extension Configuration API
+  };
+
+  return jwt.sign(payload, secret, { algorithm: 'HS256' });
+}
+
+
+/**
  * Check if user is broadcaster or moderator
  */
 export function isPrivileged(payload) {

@@ -2,6 +2,7 @@
  * Message Template Utility
  * Handles fetching and formatting category-based chat messages
  */
+import {createExtensionJWT} from "./jwt.js";
 
 const DEFAULT_MESSAGES = {
   'Food': '@{username} has ordered {item}. Enjoy your meal!',
@@ -12,18 +13,20 @@ const DEFAULT_MESSAGES = {
 /**
  * Fetches broadcaster's custom category messages from Twitch Configuration Service
  * @param {string} clientId - Twitch Client ID
- * @param {string} botToken - Bot access token
  * @param {string} channelId - Broadcaster's channel ID
  * @returns {Promise<Object>} Category messages object or default messages
  */
-export async function getCategoryMessages(clientId, botToken, channelId) {
+export async function getCategoryMessages(clientId, channelId) {
   try {
+    // Create signed JWT for extension API (uses EXTENSION_SECRET)
+    const extensionJwt = createExtensionJWT(channelId);
+
     const configResponse = await fetch(
       `https://api.twitch.tv/helix/extensions/configurations?extension_id=${process.env.EXTENSION_ID}&segment=broadcaster&broadcaster_id=${channelId}`,
       {
         headers: {
           'Client-ID': clientId,
-          'Authorization': `Bearer ${botToken}`
+          'Authorization': `Bearer ${extensionJwt}`
         }
       }
     );
