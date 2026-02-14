@@ -33,7 +33,7 @@ export async function getCategoryMessages(clientId, channelId) {
     const configResponse = await fetch(url, {
       headers: {
         // 'Client-ID': clientId,
-        'Client-ID': process.env.OWNER_CLIENT_ID,
+        'Client-ID': process.env.EXTENSION_ID,
         'Authorization': `Bearer ${extensionJwt}`
       }
     });
