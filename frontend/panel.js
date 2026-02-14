@@ -17,7 +17,7 @@ window.Twitch.ext.onAuthorized(async (auth) => {
   // console.log('Opaque ID:', window.Twitch.ext.viewer.opaqueId);
   // console.log('Viewer ID:', window.Twitch.ext.viewer.id);
   // console.log('Is Linked:', window.Twitch.ext.viewer.isLinked);
-  
+
   twitchAuth = auth;
 
   // Check if user has a Twitch account
@@ -101,7 +101,7 @@ function handleTabClick(category) {
 // Check if user is on cooldown when panel loads
 function checkInitialCooldown() {
   const remainingTime = getRemainingCooldown(twitchAuth.channelId);
-  
+
   if (remainingTime > 0) {
     // Still on cooldown
     startCooldownUI(remainingTime);
@@ -124,8 +124,8 @@ function handleCooldownEnd() {
   showNotification('✅ You can order again!', 'success');
 }
 
-// Handle order button clicks
-async function handleOrderClick(itemName) {
+// Handle order button clicks - NOW RECEIVES FULL ITEM OBJECT
+async function handleOrderClick(item) {
   if (!twitchAuth) {
     showNotification('❌ Not authorized. Please refresh the page.', 'error');
     return;
@@ -133,24 +133,28 @@ async function handleOrderClick(itemName) {
 
   // Check cooldown before ordering
   const remainingTime = getRemainingCooldown(twitchAuth.channelId);
-  
+
   if (remainingTime > 0) {
     const formattedTime = formatCooldownTime(remainingTime);
     showNotification(`⏳ Wait ${formattedTime} before ordering again`, 'warning');
     return;
   }
 
-  // console.log(`📤 Ordering: ${itemName}`);
+  // Extract item details
+  const itemName = item.name;
+  const itemCategory = item.category || 'Food'; // Default to Food if missing
+
+  // console.log(`📤 Ordering: ${itemName} (${itemCategory})`);
   // console.log('👤 Using username:', viewerDisplayName);
 
-  // Send order to backend
-  const result = await sendOrder(twitchAuth, itemName, viewerDisplayName);
-  
+  // Send order to backend WITH CATEGORY
+  const result = await sendOrder(twitchAuth, itemName, viewerDisplayName, itemCategory);
+
   if (result.success) {
     // Success! Set cooldown
     setCooldown(twitchAuth.channelId);
     showNotification(`✅ ${itemName} ordered successfully!`, 'success');
-    
+
     // Start cooldown timer
     const cooldownDuration = 60 * 1000; // 1 minute
     startCooldownUI(cooldownDuration);

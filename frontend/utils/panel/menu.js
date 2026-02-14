@@ -182,12 +182,12 @@ function displayMenuItems(items, onOrderClick) {
     itemDesc.textContent = item.description || 'A delightful cafe item';
     itemDesc.setAttribute('data-index', index);
 
-    // Create order button
+    // Create order button - PASS THE FULL ITEM OBJECT
     const orderBtn = document.createElement('button');
     orderBtn.className = 'order-button';
     orderBtn.textContent = isOnCooldown ? 'ON COOLDOWN' : 'ORDER';
     orderBtn.disabled = isOnCooldown;
-    orderBtn.addEventListener('click', () => onOrderClick(item.name));
+    orderBtn.addEventListener('click', () => onOrderClick(item)); // Pass full item object
 
     // Add toggle functionality
     infoToggle.addEventListener('click', (e) => {

@@ -14,7 +14,6 @@
         }
 
         body {
-            /* Modern pastel background for config */
             background: linear-gradient(135deg, #fde2e4, #fad2e1);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             padding: 30px 20px;
@@ -49,8 +48,46 @@
             font-size: 14px;
         }
 
-        .content {
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            background: #fef6f8;
+            border-bottom: 3px solid #f5c2d6;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 16px 20px;
+            background: transparent;
+            border: none;
+            color: #9d7689;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -3px;
+        }
+
+        .tab-button:hover {
+            background: rgba(212, 165, 188, 0.1);
+            color: #7d5a6b;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #7d5a6b;
+            border-bottom: 3px solid #d4a5bc;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
             padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .section {
@@ -269,7 +306,6 @@
             gap: 8px;
         }
 
-        /* Edit Form Styles */
         .edit-form {
             width: 100%;
         }
@@ -393,7 +429,6 @@
             }
         }
 
-        /* Category info box */
         .category-info {
             background: #e3f2fd;
             border-left: 4px solid #1976d2;
@@ -415,7 +450,6 @@
             line-height: 1.5;
         }
 
-        /* Scrollbar styling */
         ::-webkit-scrollbar {
             width: 10px;
         }
@@ -432,17 +466,103 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #d4a5bc;
         }
+
+        .message-category-section {
+            background: white;
+            border: 2px solid #e8d4dc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .message-category-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f5c2d6;
+        }
+
+        .message-category-title {
+            color: #7d5a6b;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .message-templates-list {
+            margin-bottom: 15px;
+        }
+
+        .message-template-item {
+            background: #fef6f8;
+            border: 2px solid #f5c2d6;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .message-template-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 13px;
+            border: 2px solid #e8d4dc;
+            border-radius: 4px;
+            background: white;
+            color: #5a4451;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            resize: vertical;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .message-template-input:focus {
+            outline: none;
+            border-color: #d4a5bc;
+            background: #fffbfc;
+        }
+
+        .message-template-help {
+            font-size: 11px;
+            color: #9d7689;
+        }
+
+        .message-template-help code {
+            background: #f5c2d6;
+            color: #7d5a6b;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+
+        .btn-add-template {
+            width: 100%;
+            font-size: 13px;
+            padding: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 11px;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
         <h1>🐱 Cat Cafe Configuration</h1>
-        <p>Manage your cafe menu items and categories</p>
+        <p>Manage your cafe menu and chat messages</p>
     </div>
 
-    <div class="content">
-        <!-- Add Menu Item Section -->
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+        <button class="tab-button active" data-tab="menu-tab">Menu Items</button>
+        <button class="tab-button" data-tab="messages-tab">Chat Messages</button>
+    </div>
+
+    <!-- Menu Items Tab -->
+    <div id="menu-tab" class="tab-content active">
         <div class="section">
             <div class="section-title">Add Menu Item</div>
 
@@ -484,7 +604,6 @@
             </button>
         </div>
 
-        <!-- Current Menu Items Section -->
         <div class="section">
             <div class="section-title">Current Menu Items</div>
             <div id="menuItemsList">
@@ -493,18 +612,37 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Save Button -->
+    <!-- Chat Messages Tab -->
+    <div id="messages-tab" class="tab-content">
+        <div class="section">
+            <div class="section-title">Category Chat Messages</div>
+            <div class="category-info">
+                <div class="category-info-title">💬 Customize Messages</div>
+                <div class="category-info-text">
+                    Create custom chat messages for each category. Use <strong>{username}</strong> for viewer names and <strong>{item}</strong> for menu items.
+                </div>
+            </div>
+            <div id="messageTemplates"></div>
+            <button id="resetMessagesButton" class="btn btn-secondary" style="margin-top: 15px;">
+                Reset to Default Messages
+            </button>
+        </div>
+    </div>
+
+    <!-- Save Button (always visible) -->
+    <div style="padding: 0 30px 30px 30px;">
         <button id="saveButton" class="btn btn-primary save-button">
             Save All Changes
         </button>
-
         <div id="status"></div>
     </div>
 </div>
 
 <script src="utils/config/ui.js"></script>
 <script src="utils/config/validation.js"></script>
+<script src="utils/config/tabs.js"></script>
 <script src="config.js"></script>
 </body>
 </html>

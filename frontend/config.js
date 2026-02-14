@@ -3,6 +3,15 @@ console.log('🐱 Cat Cafe Config script loaded');
 let menuItems = [];
 let editingItemId = null; // Track which item is being edited
 
+// Default category messages - ONE per category
+const DEFAULT_MESSAGES = {
+  'Food': '@{username} has ordered {item}. Enjoy your meal!',
+  'Drink': '@{username} has ordered {item}. Stay hydrated!',
+  'Sub Combo': '@{username} ordered the special {item}!'
+};
+
+let categoryMessages = { ...DEFAULT_MESSAGES };
+
 window.Twitch.ext.onAuthorized(() => {
   console.log('✅ Authorized!');
   loadExisting();
@@ -10,6 +19,7 @@ window.Twitch.ext.onAuthorized(() => {
   // Attach event listeners
   document.getElementById('addItemButton').addEventListener('click', addMenuItem);
   document.getElementById('saveButton').addEventListener('click', saveConfig);
+  document.getElementById('resetMessagesButton').addEventListener('click', resetMessages);
 });
 
 function loadExisting() {
@@ -18,7 +28,16 @@ function loadExisting() {
     const data = JSON.parse(config.content);
     console.log('Existing config:', data);
     menuItems = data.menuItems || [];
+
+    // Load category messages or use defaults
+    categoryMessages = data.categoryMessages || { ...DEFAULT_MESSAGES };
+
     renderMenuItems();
+    renderMessageTemplates();
+  }
+  else {
+    // No config yet, show defaults
+    renderMessageTemplates();
   }
 }
 
@@ -134,9 +153,70 @@ function removeMenuItem(id) {
   showStatus(`✅ "${itemName}" removed! Remember to save your changes.`, 'success');
 }
 
+function renderMessageTemplates() {
+  const container = document.getElementById('messageTemplates');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  Object.keys(categoryMessages).forEach(category => {
+    const message = categoryMessages[category];
+
+    const categorySection = document.createElement('div');
+    categorySection.className = 'message-category-section';
+
+    categorySection.innerHTML = `
+      <div class="message-category-header">
+        <span class="message-category-title">${category}</span>
+      </div>
+      <div class="message-template-item">
+        <textarea 
+          class="message-template-input"
+          rows="2"
+          maxlength="300"
+          placeholder="e.g., @{username} ordered {item}!"
+          data-category="${category}"
+        >${message}</textarea>
+        <div class="message-template-help">
+          Use <code>{username}</code> for viewer name and <code>{item}</code> for menu item
+        </div>
+      </div>
+    `;
+
+    container.appendChild(categorySection);
+
+    // Attach event listener to textarea
+    const textarea = categorySection.querySelector('.message-template-input');
+    textarea.addEventListener('change', function() {
+      updateMessageTemplate(category, this.value);
+    });
+  });
+}
+
+function updateMessageTemplate(category, value) {
+  const trimmed = value.trim();
+
+  // Validate the template
+  const validation = validateMessageTemplate(trimmed);
+  if (!validation.isValid) {
+    showStatus(validation.error, 'error');
+    return;
+  }
+
+  categoryMessages[category] = trimmed;
+  console.log(`Updated ${category} message:`, trimmed);
+}
+
+function resetMessages() {
+  categoryMessages = { ...DEFAULT_MESSAGES };
+  renderMessageTemplates();
+  showStatus('✅ Messages reset to defaults! Remember to save your changes.', 'success');
+}
+
 function saveConfig() {
   console.log('Saving config...');
   console.log('Menu items to save:', menuItems);
+  console.log('Category messages to save:', categoryMessages);
 
   if (menuItems.length === 0) {
     showStatus('⚠️ Add at least one menu item before saving', 'error');
@@ -149,8 +229,21 @@ function saveConfig() {
     return;
   }
 
+  // Validate that all message templates have required placeholders
+  let hasErrors = false;
+  Object.keys(categoryMessages).forEach(category => {
+    const template = categoryMessages[category];
+    if (!template.includes('{username}') || !template.includes('{item}')) {
+      showStatus(`⚠️ ${category} message must include {username} and {item}`, 'error');
+      hasErrors = true;
+    }
+  });
+
+  if (hasErrors) return;
+
   const configData = {
     menuItems: menuItems,
+    categoryMessages: categoryMessages,
     cooldown: 60, // 1 minute default
     timestamp: new Date().toISOString()
   };
@@ -179,7 +272,7 @@ function saveConfig() {
     });
 
     const summary = `${counts['Food']} food, ${counts['Drink']} drinks, ${counts['Sub Combo']} combos`;
-    showStatus(`✅ Saved ${menuItems.length} items (${summary}) successfully!`, 'success');
+    showStatus(`✅ Saved ${menuItems.length} items (${summary}) and custom messages successfully!`, 'success');
 
     setTimeout(() => {
       const status = document.getElementById('status');

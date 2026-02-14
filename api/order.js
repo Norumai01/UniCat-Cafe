@@ -1,5 +1,6 @@
 import handleCORS from "./utils/cors.js";
 import {forceRefreshToken, getValidToken} from "./utils/oauth.js";
+import {getCategoryMessages, formatMessage} from "./utils/messages.js";
 import dotenv from "dotenv";
 import {extractChannelInfo, verifyJWT} from "./utils/jwt.js";
 
@@ -86,13 +87,14 @@ export default async function handler(req, res) {
     3. VALIDATE REQUEST BODY
     ===================================================
     */
-    const { item, username } = req.body;
-    if (!item || !username) {
+    const { item, username, category } = req.body;
+    if (!item || !username || !category) {
       return res.status(400).json({
         error: "Missing required parameters.",
-        details: "Item and Username are required."
+        details: "Item, username, and category are required."
       });
     }
+
     // Basic validation to prevent abuse
     if (item.length > 100) {
       return res.status(400).json({
@@ -108,12 +110,26 @@ export default async function handler(req, res) {
       });
     }
 
+    if (!['Food', 'Drink', 'Sub Combo'].includes(category)) {
+      return res.status(400).json({
+        error: "Invalid category",
+        details: "Category must be Food, Drink, or Sub Combo"
+      });
+    }
+
     /*
     ===================================================
-    4. SEND MESSAGE TO TWITCH CHAT (WITH AUTO-RETRY)
+    4. GET CATEGORY MESSAGES & FORMAT MESSAGE
     ===================================================
     */
-    const message = `@${username} has ordered ${item}. Please enjoy!`;
+    const categoryMessages = await getCategoryMessages(CLIENT_ID, botToken, channelId);
+    const message = formatMessage(categoryMessages, category, username, item);
+
+    /*
+    ===================================================
+    5. SEND MESSAGE TO TWITCH CHAT (WITH AUTO-RETRY)
+    ===================================================
+    */
     console.log('Sending message:', message);
     console.log('To channel:', channelId);
 

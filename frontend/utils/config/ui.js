@@ -4,6 +4,17 @@
  */
 
 /**
+ * Helper function to escape HTML to prevent XSS
+ * @param {string} text - Text to escape
+ * @returns {string} - Escaped HTML
+ */
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+/**
  * Gets the CSS class for a category badge
  * @param {string} category - Category name
  * @returns {string} - CSS class name

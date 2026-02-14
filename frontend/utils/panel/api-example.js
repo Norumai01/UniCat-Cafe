@@ -8,9 +8,10 @@ const BACKEND_URL = 'https://your-vercel-url.vercel.app';
  * @param {Object} auth - Twitch auth object
  * @param {string} itemName - Name of the item being ordered
  * @param {string} username - Display name of the viewer
+ * @param {string} category - Category of the item (Food, Drink, Sub Combo).
  * @returns {Promise<Object>} Response object with success/error info
  */
-async function sendOrder(auth, itemName, username) {
+async function sendOrder(auth, itemName, username, category) {
   try {
     console.log(`Placing order ${itemName} for ${username}...`);
     // console.log(`Making request to: ${BACKEND_URL}/api/order`)
@@ -23,7 +24,8 @@ async function sendOrder(auth, itemName, username) {
       },
       body: JSON.stringify({
         item: itemName,
-        username: username
+        username: username,
+        category: category
       })
     });
 
