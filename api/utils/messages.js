@@ -21,7 +21,7 @@ export async function getCategoryMessages(clientId, channelId) {
     console.log('=== Fetching Config ===');
     console.log('Extension ID:', process.env.EXTENSION_ID);
     console.log('Channel ID:', channelId);
-    console.log('Client ID:', clientId);
+    console.log('Client ID:', process.env.OWNER_CLIENT_ID);
 
     // Create signed JWT for extension API (uses EXTENSION_SECRET)
     const extensionJwt = createExtensionJWT();
@@ -32,7 +32,8 @@ export async function getCategoryMessages(clientId, channelId) {
 
     const configResponse = await fetch(url, {
       headers: {
-        'Client-ID': clientId,
+        // 'Client-ID': clientId,
+        'Client-ID': process.env.OWNER_CLIENT_ID,
         'Authorization': `Bearer ${extensionJwt}`
       }
     });
