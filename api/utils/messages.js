@@ -65,8 +65,8 @@ export async function getCategoryMessages(channelId) {
 
       if (config.categoryMessages || config.failMessages) {
         console.log('✅ Using custom category messages from config');
-        if (config.categoryMessages) console.log('Custom Success messages:', JSON.stringify(config.categoryMessages, null, 2));
-        if (config.failMessages) console.log('Custom Fail messages:', JSON.stringify(config.failMessages, null, 2));
+        // if (config.categoryMessages) console.log('Custom Success messages:', JSON.stringify(config.categoryMessages, null, 2));
+        // if (config.failMessages) console.log('Custom Fail messages:', JSON.stringify(config.failMessages, null, 2));
 
         return {
           success: config.categoryMessages || DEFAULT_MESSAGES,
