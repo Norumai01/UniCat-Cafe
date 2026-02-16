@@ -31,13 +31,17 @@ function showLoginRequired() {
   const container = document.querySelector('.container');
   container.innerHTML = `
     <div class="auth-required">
-      <div class="auth-icon">🐱</div>
+      <img 
+        src="assets/UNICAT_cup.png"
+        alt="UniCat Cup"
+        class="auth-img-icon"
+      />
       <div class="auth-title">Login Required</div>
       <div class="auth-message">
         Please log in to Twitch to order from the Cat Cafe!
       </div>
       <div class="auth-note">
-        Only Twitch users can place orders 😊
+        Only Twitch users can place orders
       </div>
     </div>
   `;
@@ -51,7 +55,11 @@ function showIdentityRequired(onLinkClick) {
   const container = document.querySelector('.container');
   container.innerHTML = `
     <div class="auth-required">
-      <div class="auth-icon">🐱</div>
+      <img 
+        src="assets/UNICAT_boba.png"
+        alt="UniCat Cup"
+        class="auth-img-icon"
+      />
       <div class="auth-title">Link Your Account</div>
       <div class="auth-message">
         To order from the Cat Cafe, we need to know who you are!
@@ -60,7 +68,7 @@ function showIdentityRequired(onLinkClick) {
         Link Twitch Account
       </button>
       <div class="auth-note">
-        This lets us personalize your orders in chat 😊
+        This lets us personalize your orders in the chat message
       </div>
     </div>
   `;
@@ -101,7 +109,7 @@ function showUsernameFetchError() {
         Refresh Page
       </button>
       <div class="auth-note">
-        If the problem persists, try logging out and back into Twitch 😊
+        If the problem persists, try logging out and back into Twitch
       </div>
     </div>
   `;

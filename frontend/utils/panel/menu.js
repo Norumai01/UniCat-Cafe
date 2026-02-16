@@ -143,8 +143,11 @@ function displayMenuItems(items, onOrderClick) {
   if (items.length === 0) {
     menuDisplay.innerHTML = `
       <div class="empty-category">
-        <!--    TODO: Replace empty icon here with official assets.    -->
-        <div class="empty-icon">🍃</div> 
+        <img 
+          src="assets/UNICAT_boba.png"
+          alt="UniCat Mug"
+          class="empty-img-icon"  
+        />
         <div class="empty-text">No items in this category yet</div>
       </div>
     `;
