@@ -12,9 +12,9 @@ const DEFAULT_MESSAGES = {
 
 // Default fail messages
 const DEFAULT_FAIL_MESSAGES = {
-  'Food': 'Oh no! @{username} dropped the {item} on the floor! 😱',
-  'Drink': '@{username}\'s {item} spilled everywhere! Better luck next time! 💦',
-  'Sub Combo': 'The kitchen ran out of ingredients for {item}! Sorry @{username}! 😢'
+  'Food': 'Oh no! @{username} dropped the {item} on the floor!',
+  'Drink': '@{username}\'s {item} spilled everywhere! Better luck next time!',
+  'Sub Combo': 'The kitchen ran out of ingredients for {item}! Sorry @{username}!'
 };
 
 let categoryMessages = { ...DEFAULT_MESSAGES };
@@ -218,7 +218,7 @@ function renderFailMessageTemplates() {
 
     categorySection.innerHTML = `
       <div class="message-category-header">
-        <span class="message-category-title">${category} - Fail Message</span>
+        <span class="message-category-title">${category}</span>
       </div>
       <div class="message-template-item">
         <textarea 

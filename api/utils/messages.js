@@ -11,9 +11,9 @@ const DEFAULT_MESSAGES = {
 };
 
 const DEFAULT_FAIL_MESSAGES = {
-  'Food': 'Oh no! @{username} dropped the {item} on the floor! 😱',
-  'Drink': '@{username}\'s {item} spilled everywhere! Better luck next time! 💦',
-  'Sub Combo': 'The kitchen ran out of ingredients for {item}! Sorry @{username}! 😢'
+  'Food': 'Oh no! @{username} dropped the {item} on the floor!',
+  'Drink': '@{username}\'s {item} spilled everywhere! Better luck next time!',
+  'Sub Combo': 'The kitchen ran out of ingredients for {item}! Sorry @{username}!'
 };
 
 /**
@@ -109,11 +109,11 @@ export function formatSuccessMessage(successMessages, category, username, item) 
 }
 
 /**
- * Determines if order should fail (50% chance)
+ * Determines if order should fail (8% chance)
  * @returns {boolean} True if order fails
  */
 export function shouldFail() {
-  return Math.random() <= 0.50;
+  return Math.random() >= 0.92;
 }
 
 /**
