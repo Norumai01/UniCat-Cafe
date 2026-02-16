@@ -2,7 +2,6 @@ import handleCORS from "./utils/cors.js";
 import {forceRefreshToken, getValidToken} from "./utils/oauth.js";
 import {
   getCategoryMessages,
-  formatMessage,
   formatSuccessMessage,
   shouldFail,
   formatFailMessage
