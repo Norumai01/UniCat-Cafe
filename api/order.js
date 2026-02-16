@@ -1,6 +1,12 @@
 import handleCORS from "./utils/cors.js";
 import {forceRefreshToken, getValidToken} from "./utils/oauth.js";
-import {getCategoryMessages, formatMessage} from "./utils/messages.js";
+import {
+  getCategoryMessages,
+  formatMessage,
+  formatSuccessMessage,
+  shouldFail,
+  formatFailMessage
+} from "./utils/messages.js";
 import dotenv from "dotenv";
 import {extractChannelInfo, verifyJWT} from "./utils/jwt.js";
 
@@ -118,28 +124,44 @@ export default async function handler(req, res) {
     }
 
     /*
-    ===================================================
-    4. GET CATEGORY MESSAGES & FORMAT MESSAGE
-    ===================================================
+    ===========================================================
+    4. GET CATEGORY MESSAGES & FORMAT RECEIVED AND FAIL MESSAGE
+    ===========================================================
     */
-    const categoryMessages = await getCategoryMessages(channelId);
-    const message = formatMessage(categoryMessages, category, username, item);
+    const messages = await getCategoryMessages(channelId);
+
+    // Always send a message that the viewer has recieved the order.
+    const successMessage = formatSuccessMessage(messages.success, category, username, item);
+
+    // 8% chance to fail
+    const hasFailed = shouldFail()
+    const failMessage =  hasFailed ? formatFailMessage(messages.failure, category, username, item) : null;
 
     /*
     ===================================================
     5. SEND MESSAGE TO TWITCH CHAT (WITH AUTO-RETRY)
     ===================================================
     */
-    console.log('Sending message:', message);
+    console.log('Sending success message:', successMessage);
     console.log('To channel:', channelId);
 
-    const result = await sendMessageWithRetry(CLIENT_ID, botToken, channelId, BOT_ID, message);
+    const successResult = await sendMessageWithRetry(CLIENT_ID, botToken, channelId, BOT_ID, successMessage);
+    console.log('Success message sent');
 
-    console.log('Message sent successfully');
+    // Send fail message (i.e. viewer drop food, spill drink, etc.)
+    if (failMessage) {
+      // Small delay so messages doesn't arrive simultaneously
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      await sendMessageWithRetry(CLIENT_ID, botToken, channelId, BOT_ID, failMessage);
+      console.log("Fail message sent")
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Order sent to chat!',
-      data: result
+      failed: hasFailed,
+      data: successResult
     });
   }
   catch (error) {

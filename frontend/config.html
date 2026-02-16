@@ -617,14 +617,23 @@
     <!-- Chat Messages Tab -->
     <div id="messages-tab" class="tab-content">
         <div class="section">
-            <div class="section-title">Category Chat Messages</div>
             <div class="category-info">
-                <div class="category-info-title">💬 Customize Messages</div>
+                <div class="category-info-title">Customize Messages</div>
                 <div class="category-info-text">
                     Create custom chat messages for each category. Use <strong>{username}</strong> for viewer names and <strong>{item}</strong> for menu items.
                 </div>
             </div>
-            <div id="messageTemplates"></div>
+
+            <div>
+                <div class="section-title">Received Chat Messages</div>
+                <div id="messageTemplates"></div>
+            </div>
+
+            <div>
+                <div class="section-title">Failed Chat Messages</div>
+                <div id="failMessageTemplates"></div>
+            </div>
+
             <button id="resetMessagesButton" class="btn btn-secondary" style="margin-top: 15px;">
                 Reset to Default Messages
             </button>
