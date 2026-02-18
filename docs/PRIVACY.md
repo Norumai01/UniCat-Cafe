@@ -1,6 +1,6 @@
 # Privacy Policy for UniCat Cafe Twitch Extension
 
-**Last Updated: Feb 12, 2026**
+**Last Updated: Feb 17, 2026**
 
 This Privacy Policy explains how UniCat Cafe (the "Extension") collects, uses, and protects information when you use our services.
 
@@ -9,7 +9,7 @@ This Privacy Policy explains how UniCat Cafe (the "Extension") collects, uses, a
 ### For Viewers:
 - **Twitch User Identification**: Opaque user IDs provided by Twitch, anonymous by default
 - **Linked Account Data**: Twitch username and user IDs. only when permitted explicitly by users
-- **Interaction Data**: Order cooldown timestamps and feature usage, stored locally in your browser
+- **Interaction Data**: Order timestamps and feature usage, stored locally in your browser
 
 ### For Streamers:
 - **Channel Information**: Twitch channel ID and broadcaster information
@@ -35,19 +35,19 @@ We use collected information to:
 
 We may share information only in these limited circumstances:
 
-- **Service Providers**: Trusted vendors who help us with operating the Extension (e.g. Twitch APIs, hosting).
+- **Service Providers**: Twitch APIs and Vercel (hosting vendor), which help us operate the Extension's core functionality.
 - **Legal Requirements**: When required by law, court order, or government request
 - **Your Consent**: When you explicitly authorize data sharing
 
-All third parties are required to protect your data and use it for intended purpose. 
+If such cases occur, all third parties are required to protect your data and use it for their intended purpose. 
 
 ## 4. Data Retention
 
 - **Viewer Orders**: Not stored persistently (ephemeral processing only)
-- **Cooldown Timers**: Stored in browser localStorage until you clear your cache
+- **Cooldown Timers**: Stored in your local browser (localStorage) until you clear your cache
 - **Streamer Configurations**: Retained via Twitch Configuration Service until you uninstall the Extension
 
-You may request deletion of your data by contacting us at **twitch.norumai@gmail.com**. Some data may be retained as required for legal compliance.
+UniCat Cafe does not persistently store viewer data on our servers. Streamer configurations are retained locally via Twitch's Configuration Service and can be removed by uninstalling the Extension. For any privacy questions or concerns, contact us at twitch.norumai@gmail.com.
 
 ## 5. Data Security
 
@@ -62,11 +62,11 @@ However, no system is completely secure. You use this Extension at your own risk
 ## 6. Your Rights and Choices
 
 - **Identity Control**: You can choose not to share your identity for personalized features
-- **Data Access**: Request a copy of data we hold about you
-- **Data Deletion**: Request removal of your information (subject to legal retention requirements)
+- **Data Access**: We do not persistently store personal viewer data on our servers. Streamer configuration are stored locally.
+- **Data Deletion**: Streamers can remove their configuration data by uninstalling the Extension through Twitch.
 - **Opt-Out**: Uninstall the Extension at any time to stop data collection
 
-To exercise these rights, contact us at **twitch.norumai@gmail.com**.
+For any additional questions or concerns, contact us at **twitch.norumai@gmail.com**.
 
 ## 7. Third-Party Services
 
@@ -78,11 +78,11 @@ UniCat Cafe is fully open-source and available at [GitHub](https://github.com/No
 
 ## 9. Children's Privacy
 
-This Extension is not directed at children under 13. We do not knowingly collect data from minors. If we discover such collection, we will delete the data immediately.
+This Extension is not directed at children under 13. We do not knowingly collect data from minors, or in general. If we discover such collection, we will delete the data immediately.
 
 ## 10. International Users
 
-Using this Extension may result in data transfers to servers outside your country. By using the Extension, you consent to such transfers in accordance with this Privacy Policy.
+This Extension's backend services are hosted in the United States via Vercel. If you are accessing the Extension from outside the United States, your data (including any information transmitted during use) will be processed on servers located in the US. By using the Extension, you consent to this transfer and processing in accordance with this Privacy Policy.
 
 ## 11. Updates to This Policy
 

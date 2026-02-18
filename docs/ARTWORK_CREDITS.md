@@ -23,4 +23,4 @@ The pixel art assets in this directory are watermarked and used with the artist'
 
 **If you want to use this artwork elsewhere, contact the artist directly for permission.**
 
-All artwork rights remain with **[munchtea](https://munchtea.carrd.co)**. Watermarks must not be removed or altered.
+All artwork rights remain with **[munchtea](https://munchtea.carrd.co)**.

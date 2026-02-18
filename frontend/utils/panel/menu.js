@@ -144,7 +144,7 @@ function displayMenuItems(items, onOrderClick) {
     menuDisplay.innerHTML = `
       <div class="empty-category">
         <img 
-          src="assets/UNICAT_boba.png"
+          src="assets/UNICAT_mug.png"
           alt="UniCat Mug"
           class="empty-img-icon"  
         />

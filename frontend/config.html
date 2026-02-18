@@ -61,8 +61,8 @@
             background: transparent;
             border: none;
             color: #9d7689;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 16px;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
             border-bottom: 3px solid transparent;
@@ -78,6 +78,17 @@
             background: white;
             color: #7d5a6b;
             border-bottom: 3px solid #d4a5bc;
+        }
+
+        /* Logo */
+        .config-logo {
+            padding: 16px 20px;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            height: 16rem;
         }
 
         /* Tab Content */
@@ -561,8 +572,17 @@
         <button class="tab-button" data-tab="messages-tab">Chat Messages</button>
     </div>
 
+    <div class="config-logo">
+        <div class="logo-container">
+            <img src="assets/menu_header.png"
+                 alt="UniCat Logo"
+                 style="height: auto; width: auto;"
+            />
+        </div>
+    </div>
+
     <!-- Menu Items Tab -->
-    <div id="menu-tab" class="tab-content active">
+    <div id="menu-tab" class="tab-content active" style="padding-top: 10px;">
         <div class="section">
             <div class="section-title">Add Menu Item</div>
 
@@ -615,7 +635,7 @@
     </div>
 
     <!-- Chat Messages Tab -->
-    <div id="messages-tab" class="tab-content">
+    <div id="messages-tab" class="tab-content" style="padding-top: 10px;">
         <div class="section">
             <div class="category-info">
                 <div class="category-info-title">Customize Messages</div>

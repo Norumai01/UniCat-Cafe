@@ -1,6 +1,6 @@
 # Terms of Service for UniCat Cafe Twitch Extension
 
-**Last Updated: Feb 12, 2026**
+**Last Updated: Feb 17, 2026**
 
 By installing, accessing, or using the UniCat Cafe Twitch Extension (the "Extension"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Extension.
 
@@ -19,19 +19,18 @@ UniCat Cafe is a free, open-source Twitch Extension that provides:
 - Comply with all applicable laws and regulations
 - Follow Twitch Terms of Service and Community Guidelines
 - Use the Extension responsibly (no spam, abuse, or exploits)
-- Not attempt to reverse-engineer or hack the Extension
 - Not use the Extension for harassment or malicious purposes
 
 ### Streamers Must:
 - Configure CafeCatBot as a mod in your channel for best experience
 - Moderate bot messages as appropriate for your community
-- Ensure menu content is appropriate and non-harmful
+- Ensure menu content and bot messages is appropriate and non-harmful
 - Take responsibility for how you configure and use the Extension
 
 ### Viewers Must:
 - Not spam orders or abuse the ordering system
-- Understand that twitch username and IDs sharing is optional but required for the Extension
-- Not attempt to exploit cooldown systems
+- Understand that twitch username and IDs sharing is optional but required for usage of the Extension
+- Not attempt to exploit cooldown timers, Twitch APIs or Extension systems
 - Respect other community members
 
 ## 3. Platform Compliance
@@ -46,7 +45,7 @@ You agree to comply with:
 
 ## 4. Third-Party Artwork
 
-UniCat Cafe includes watermarked pixel art created by [munchtea](https://munchtea.carrd.co/), used with permission. By using this Extension or accessing the source code, you agree:
+UniCat Cafe includes pixel art created by [munchtea](https://munchtea.carrd.co/), used with permission. By using this Extension or accessing the source code, you agree:
 
 **You May:**
 - Use the Extension and view the artwork as intended

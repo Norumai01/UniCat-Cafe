@@ -158,10 +158,10 @@ function renderEditForm(item) {
 
         <div class="edit-form-actions">
           <button class="btn btn-primary btn-save-edit" data-id="${item.id}">
-            💾 Save Changes
+            Save Changes
           </button>
           <button class="btn btn-secondary btn-cancel-edit">
-            ✖️ Cancel
+            Cancel
           </button>
         </div>
       </div>
