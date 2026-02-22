@@ -1,4 +1,4 @@
-console.log('🌐 API utility loaded');
+//console.log('🌐 API utility loaded');
 
 // ⚙️ CONFIGURATION - UPDATE THIS WITH YOUR VERCEL URL
 const BACKEND_URL = 'https://your-vercel-url.vercel.app';
@@ -13,7 +13,7 @@ const BACKEND_URL = 'https://your-vercel-url.vercel.app';
  */
 async function sendOrder(auth, itemName, username, category) {
   try {
-    console.log(`Placing order ${itemName} for ${username}...`);
+    // console.log(`Placing order ${itemName} for ${username}...`);
     // console.log(`Making request to: ${BACKEND_URL}/api/order`)
 
     const response = await fetch(`${BACKEND_URL}/api/order`, {
@@ -33,28 +33,28 @@ async function sendOrder(auth, itemName, username, category) {
     // console.log('📥 Response:', response.status, data);
 
     if (response.ok) {
-      console.log(`✅ Order placed successfully.`);
+      // console.log(`✅ Order placed successfully.`);
       return { success: true, data };
     }
     else if (response.status === 401) {
-      return { 
-        success: false, 
-        error: `Authorization failed: ${data.details || data.error}` 
+      return {
+        success: false,
+        error: `Authorization failed: ${data.details || data.error}`
       };
     }
     else {
-      return { 
-        success: false, 
-        error: data.error || 'Unknown error' 
+      return {
+        success: false,
+        error: data.error || 'Unknown error'
       };
     }
 
   }
   catch (error) {
     console.error('💥 Order failed:', error);
-    return { 
-      success: false, 
-      error: `Network error: ${error.message}` 
+    return {
+      success: false,
+      error: `Network error: ${error.message}`
     };
   }
 }

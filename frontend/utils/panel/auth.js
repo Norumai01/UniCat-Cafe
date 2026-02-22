@@ -1,4 +1,4 @@
-console.log('🔐 Auth utility loaded');
+//console.log('🔐 Auth utility loaded');
 
 /**
  * Fetches the viewer's display name from Twitch API
@@ -18,7 +18,7 @@ async function fetchViewerName(auth) {
     });
 
     if (!response.ok) {
-      console.log('⚠️ Could not fetch username, returning...');
+      //console.warn('⚠️ Could not fetch username, returning...');
       return 'Viewer';
     }
 
@@ -26,11 +26,11 @@ async function fetchViewerName(auth) {
     const displayName = body.data.at(0)?.display_name;
 
     if (displayName) {
-      console.log("Viewer name fetched successfully!");
+      //console.log("Viewer name fetched successfully!");
       return displayName;
     }
     else {
-      console.log('⚠️ No display name found');
+      //console.warn('⚠️ No display name found');
       return 'Viewer';
     }
   }
@@ -44,6 +44,6 @@ async function fetchViewerName(auth) {
  * Requests user to share their Twitch identity
  */
 function requestIdentityShare() {
-  console.log('Requesting identity share...');
+  //console.log('Requesting identity share...');
   window.Twitch.ext.actions.requestIdShare();
 }

@@ -1,4 +1,4 @@
-console.log('🎨 UI utility loaded');
+//console.log('🎨 UI utility loaded');
 
 /**
  * Shows a notification message to the user

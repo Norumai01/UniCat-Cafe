@@ -1,4 +1,4 @@
-console.log('📋 Menu utility loaded');
+//console.log('📋 Menu utility loaded');
 
 // Hardcoded categories
 const CATEGORIES = ['Food', 'Drink', 'Sub Combo'];
@@ -11,7 +11,7 @@ let cooldownIntervalId = null; // Track the cooldown timer interval
  * @returns {Array|null} Array of menu items or null if not configured
  */
 function loadMenuConfig() {
-  console.log('Loading config...');
+  //console.log('Loading config...');
   const config = window.Twitch.ext.configuration.broadcaster;
 
   if (config && config.content) {
@@ -120,7 +120,7 @@ function displayCategoryTabs(groupedItems, onTabClick) {
     tabsContainer.appendChild(tab);
   });
 
-  console.log('✅ Category tabs displayed');
+  //console.log('✅ Category tabs displayed');
 }
 
 /**
@@ -333,7 +333,7 @@ function updateCooldownTimer(remainingTime, onCooldownEnd) {
  * Re-enables ordering after cooldown expires
  */
 function enableOrdering() {
-  console.log('✅ Cooldown expired, re-enabling ordering');
+  //console.log('✅ Cooldown expired, re-enabling ordering');
 
   // Clear cooldown state flag
   isOnCooldown = false;

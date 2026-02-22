@@ -1,4 +1,4 @@
-console.log('🐱 Cat Cafe Config script loaded');
+//console.log('🐱 Cat Cafe Config script loaded');
 
 let menuItems = [];
 let editingItemId = null; // Track which item is being edited
@@ -21,7 +21,7 @@ let categoryMessages = { ...DEFAULT_MESSAGES };
 let failMessages = { ...DEFAULT_FAIL_MESSAGES };
 
 window.Twitch.ext.onAuthorized(() => {
-  console.log('✅ Authorized!');
+  //console.log('✅ Authorized!');
   loadExisting();
 
   // Attach event listeners
@@ -34,7 +34,7 @@ function loadExisting() {
   const config = window.Twitch.ext.configuration.broadcaster;
   if (config && config.content) {
     const data = JSON.parse(config.content);
-    console.log('Existing config:', data);
+    //console.log('Existing config:', data);
     menuItems = data.menuItems || [];
 
     // Load category messages or use defaults
@@ -77,7 +77,7 @@ function addMenuItem() {
   };
 
   menuItems.push(newItem);
-  console.log('Added item:', newItem);
+  //console.log('Added item:', newItem);
 
   // Clear inputs
   nameInput.value = '';
@@ -134,7 +134,7 @@ function saveEdit(id) {
       category: category
     };
 
-    console.log('Updated item:', menuItems[itemIndex]);
+    //console.log('Updated item:', menuItems[itemIndex]);
 
     editingItemId = null;
     renderMenuItems();
@@ -151,9 +151,9 @@ function removeMenuItem(id) {
   const item = menuItems.find(item => item.id === id);
   const itemName = item ? item.name : 'Item';
 
-  console.log('Removing item with ID:', id);
+  //console.log('Removing item with ID:', id);
   menuItems = menuItems.filter(item => item.id !== id);
-  console.log('Remaining items:', menuItems);
+  //console.log('Remaining items:', menuItems);
 
   // Clear editing state if we're removing the item being edited
   if (editingItemId === id) {
@@ -255,7 +255,7 @@ function updateMessageTemplate(category, value) {
   }
 
   categoryMessages[category] = trimmed;
-  console.log(`Updated ${category} message:`, trimmed);
+  //console.log(`Updated ${category} message:`, trimmed);
 }
 
 function updateFailMessageTemplate(category, value) {
@@ -269,7 +269,7 @@ function updateFailMessageTemplate(category, value) {
   }
 
   failMessages[category] = trimmed;
-  console.log(`Updated ${category} fail message:`, trimmed);
+  //console.log(`Updated ${category} fail message:`, trimmed);
 }
 
 function resetMessages() {
@@ -282,10 +282,10 @@ function resetMessages() {
 }
 
 function saveConfig() {
-  console.log('Saving config...');
-  console.log('Menu items to save:', menuItems);
-  console.log('Category messages to save:', categoryMessages);
-  console.log('Fail messages to save:', failMessages);
+  // console.log('Saving config...');
+  // console.log('Menu items to save:', menuItems);
+  // console.log('Category messages to save:', categoryMessages);
+  // console.log('Fail messages to save:', failMessages);
 
   if (menuItems.length === 0) {
     showStatus('⚠️ Add at least one menu item before saving', 'error');
@@ -336,7 +336,7 @@ function saveConfig() {
       JSON.stringify(configData)
     );
 
-    console.log('✅ Config saved!');
+    //console.log('✅ Config saved!');
 
     // Count items by category
     const counts = {
@@ -368,4 +368,4 @@ function saveConfig() {
   }
 }
 
-console.log('🐱 Cat Cafe Config ready!');
+//console.log('🐱 Cat Cafe Config ready!');

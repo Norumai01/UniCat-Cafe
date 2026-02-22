@@ -3,7 +3,7 @@
  * Handles switching between Menu Items and Chat Messages tabs
  */
 
-console.log('📑 Tabs utility loaded');
+//console.log('📑 Tabs utility loaded');
 
 // Initialize tabs when DOM is ready
 function initializeTabs() {

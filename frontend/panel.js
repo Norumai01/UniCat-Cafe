@@ -1,4 +1,4 @@
-console.log('🐱 Cat Cafe Panel script loaded');
+//console.log('🐱 Cat Cafe Panel script loaded');
 
 // Global state
 let twitchAuth = null;
@@ -9,7 +9,7 @@ let cooldownTimer = null;
 
 // Initialize when Twitch authorizes the extension
 window.Twitch.ext.onAuthorized(async (auth) => {
-  console.log('✅ Authorized!');
+  //console.log('✅ Authorized!');
   // DON'T UNCOMMENT BELOW IN PRODUCTION - exposes sensitive information.
   // console.log('✅ Authorized!', auth);
   // console.log('Channel ID:', auth.channelId);
@@ -22,7 +22,7 @@ window.Twitch.ext.onAuthorized(async (auth) => {
 
   // Check if user has a Twitch account
   if (window.Twitch.ext.viewer.opaqueId.startsWith('A')) {
-    console.log('🚫 User not logged in');
+    //console.log('🚫 User not logged in');
     showLoginRequired();
     return;
   }
@@ -30,12 +30,12 @@ window.Twitch.ext.onAuthorized(async (auth) => {
   // Check if Twitch account is linked, otherwise get permissions to share user id.
   // Note: Broadcaster ID are linked by default to the extension installed on their channel.
   if (!window.Twitch.ext.viewer.isLinked) {
-    console.log('🔒 User logged in but identity not linked');
+    //console.log('🔒 User logged in but identity not linked');
     showIdentityRequired(requestIdentityShare);
     return;
   }
 
-  console.log('✅ User linked');
+  //console.log('✅ User linked');
   viewerDisplayName = await fetchViewerName(auth);
 
   // If username fetch failed, show error and prevent API calls
@@ -167,10 +167,10 @@ async function handleOrderClick(item) {
 
 // Listen for config changes
 window.Twitch.ext.configuration.onChanged(() => {
-  console.log('Config changed! Reloading...');
+  //console.log('Config changed! Reloading...');
   loadAndDisplayMenu();
 });
 
-console.log('🐱 Cat Cafe Panel ready!');
+//console.log('🐱 Cat Cafe Panel ready!');
 // console.log('Backend URL:', getBackendUrl());
 // console.log('Cooldown Duration:', 60 / 60, 'minutes');
