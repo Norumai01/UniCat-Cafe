@@ -12,3 +12,4 @@
 
 - Added mobile view for Twitch mobile app
 - Adjusted cooldown timer to work with mobile app. 
+- Added a loading transition before the order is placed, so users will know if they have placed order or not. 

@@ -136,8 +136,8 @@
             padding: 14px;
             margin-bottom: 12px;
             box-shadow:
-                2px 2px 0 #b8879d,
-                inset -1px -1px 0 rgba(0,0,0,0.08);
+                    2px 2px 0 #b8879d,
+                    inset -1px -1px 0 rgba(0,0,0,0.08);
         }
 
         .menu-item:active {
@@ -227,8 +227,8 @@
             font-weight: 600;
             width: 100%;
             box-shadow:
-                2px 2px 0 #b8879d,
-                inset -1px -1px 0 rgba(255,255,255,0.3);
+                    2px 2px 0 #b8879d,
+                    inset -1px -1px 0 rgba(255,255,255,0.3);
             transition: all 0.1s ease;
             /* Minimum touch target */
             min-height: 44px;
@@ -369,6 +369,21 @@
             margin-top: 12px;
         }
 
+        /* Loading dots animation for order button */
+        .order-button.loading-dots::after {
+            content: '▪ ▪ ▪';
+            display: inline-block;
+            animation: loadingDots 1.2s steps(3, end) infinite;
+            letter-spacing: 4px;
+        }
+
+        @keyframes loadingDots {
+            0%   { opacity: 0.2; }
+            33%  { opacity: 1; }
+            66%  { opacity: 0.5; }
+            100% { opacity: 0.2; }
+        }
+
         @keyframes slideInTop {
             from {
                 transform: translateX(-50%) translateY(-60px);
@@ -398,9 +413,9 @@
     <div class="panel-title">UNICAT CAFE</div>
     <div class="panel-logo">
         <img
-            src="assets/menu_header.png"
-            alt="UniCat Mug"
-            style="height: auto; width: auto;"
+                src="assets/menu_header.png"
+                alt="UniCat Mug"
+                style="height: auto; width: auto;"
         />
     </div>
     <div id="itemCount" class="item-count">Loading...</div>

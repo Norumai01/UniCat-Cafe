@@ -190,7 +190,7 @@ function displayMenuItems(items, onOrderClick) {
     orderBtn.className = 'order-button';
     orderBtn.textContent = isOnCooldown ? 'ON COOLDOWN' : 'ORDER';
     orderBtn.disabled = isOnCooldown;
-    orderBtn.addEventListener('click', () => onOrderClick(item)); // Pass full item object
+    orderBtn.addEventListener('click', () => onOrderClick(item, orderBtn)); // Pass full item and button ref
 
     // Add toggle functionality
     infoToggle.addEventListener('click', (e) => {
@@ -366,4 +366,35 @@ function enableOrdering() {
  */
 function getIsOnCooldown() {
   return isOnCooldown;
+}
+
+/**
+ * Sets all order buttons into a loading state while an order is in flight.
+ * The clicked button shows the animated dots; all others are silently disabled.
+ * @param {HTMLElement} clickedButton - The button the user clicked
+ */
+function setOrderButtonLoading(clickedButton) {
+  const allButtons = document.querySelectorAll('.order-button');
+  allButtons.forEach(btn => {
+    btn.disabled = true;
+    if (btn === clickedButton) {
+      btn.textContent = '';
+      btn.classList.add('loading-dots');
+    }
+  });
+}
+
+/**
+ * Restores all order buttons after an order resolves.
+ * @param {HTMLElement} clickedButton - The button that was originally clicked
+ */
+function clearOrderButtonLoading(clickedButton) {
+  const allButtons = document.querySelectorAll('.order-button');
+  allButtons.forEach(btn => {
+    btn.disabled = false;
+    if (btn === clickedButton) {
+      btn.textContent = 'ORDER';
+      btn.classList.remove('loading-dots');
+    }
+  });
 }

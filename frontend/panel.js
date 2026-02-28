@@ -124,8 +124,8 @@ function handleCooldownEnd() {
   showNotification('✅ You can order again!', 'success');
 }
 
-// Handle order button clicks - NOW RECEIVES FULL ITEM OBJECT
-async function handleOrderClick(item) {
+// Handle order button clicks - NOW RECEIVES FULL ITEM OBJECT AND BUTTON REFERENCE
+async function handleOrderClick(item, button) {
   if (!twitchAuth) {
     showNotification('❌ Not authorized. Please refresh the page.', 'error');
     return;
@@ -147,8 +147,14 @@ async function handleOrderClick(item) {
   // console.log(`📤 Ordering: ${itemName} (${itemCategory})`);
   // console.log('👤 Using username:', viewerDisplayName);
 
+  // Show loading state on the button while waiting for the API
+  setOrderButtonLoading(button);
+
   // Send order to backend WITH CATEGORY
   const result = await sendOrder(twitchAuth, itemName, viewerDisplayName, itemCategory);
+
+  // Always clear loading state when the order resolves
+  clearOrderButtonLoading(button);
 
   if (result.success) {
     // Success! Set cooldown
