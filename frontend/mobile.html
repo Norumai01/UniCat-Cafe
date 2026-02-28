@@ -5,8 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
+        @font-face {
+            font-family: 'Press Start 2P';
+            src: url('assets/fonts/PressStart2P.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -382,6 +389,41 @@
             33%  { opacity: 1; }
             66%  { opacity: 0.5; }
             100% { opacity: 0.2; }
+        }
+
+        /* Landscape orientation - reduce vertical space consumption */
+        @media (orientation: landscape) {
+            body {
+                padding: 6px 12px;
+            }
+
+            .panel-title {
+                font-size: 11px;
+                margin-bottom: 4px;
+            }
+
+            .panel-logo {
+                height: 50px;
+                margin-bottom: 5px;
+            }
+
+            .item-count {
+                margin-bottom: 6px;
+            }
+
+            .category-tabs {
+                margin-bottom: 8px;
+            }
+
+            .menu-item {
+                padding: 10px 14px;
+                margin-bottom: 8px;
+            }
+
+            .order-button {
+                padding: 8px 16px;
+                min-height: 44px;
+            }
         }
 
         @keyframes slideInTop {

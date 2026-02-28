@@ -1,6 +1,6 @@
 # Privacy Policy for UniCat Cafe Twitch Extension
 
-**Last Updated: Feb 17, 2026**
+**Last Updated: Feb 27, 2026**
 
 This Privacy Policy explains how UniCat Cafe (the "Extension") collects, uses, and protects information when you use our services.
 
@@ -39,7 +39,7 @@ We may share information only in these limited circumstances:
 - **Legal Requirements**: When required by law, court order, or government request
 - **Your Consent**: When you explicitly authorize data sharing
 
-If such cases occur, all third parties are required to protect your data and use it for their intended purpose. 
+If such cases occur, all third parties are required to protect your data and use it for their intended purpose.
 
 ## 4. Data Retention
 
@@ -76,18 +76,24 @@ The Extension integrates with Twitch APIs and may interact with other third-part
 
 UniCat Cafe is fully open-source and available at [GitHub](https://github.com/Norumai01/UniCat-Cafe). You can review the source code to verify our data handling practices.
 
-## 9. Children's Privacy
+## 9. Children's Privacy and Age Restrictions
 
 This Extension is not directed at children under 13. We do not knowingly collect data from minors, or in general. If we discover such collection, we will delete the data immediately.
 
-## 10. International Users
+UniCat Cafe contains no age-restricted content and is suitable for all ages. Age verification and content rating enforcement are managed by the Twitch platform and, on mobile devices, by the iOS App Store and Google Play Store. We rely on Twitch's platform-level age controls and do not implement a separate age verification mechanism within the Extension.
+
+## 10. Content Moderation
+
+UniCat Cafe does not support user-generated content beyond streamers configuring their own menu items. The Extension does not have its own moderation system. Content moderation, user reporting, and the ability to block or ban users are handled natively by the Twitch platform. If you encounter abusive behavior while using this Extension, please use Twitch's built-in reporting and blocking tools.
+
+## 11. International Users
 
 This Extension's backend services are hosted in the United States via Vercel. If you are accessing the Extension from outside the United States, your data (including any information transmitted during use) will be processed on servers located in the US. By using the Extension, you consent to this transfer and processing in accordance with this Privacy Policy.
 
-## 11. Updates to This Policy
+## 12. Updates to This Policy
 
 We may update this Privacy Policy when adding features or as required by law. Continued use of the Extension after updates constitutes acceptance of the revised policy. The "Last Updated" date will reflect any changes.
 
-## 12. Contact Us
+## 13. Contact Us
 
 For questions or concerns about this Privacy Policy: **twitch.norumai@gmail.com**

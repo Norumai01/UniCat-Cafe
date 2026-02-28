@@ -159,6 +159,13 @@ Check the following:
 **Q: Can I suggest new features or report bugs?**  
 Absolutely! Open an issue on the [GitHub repository](https://github.com/Norumai01/UniCat-Cafe) or send feedback to **twitch.norumai@gmail.com**.
 
+**Q: How is abusive or objectionable content handled?**  
+UniCat Cafe does not allow user-generated content beyond streamers configuring their own menu items. Content moderation, user reporting, and the ability to block or ban users are all handled natively by the Twitch platform. If you experience abuse, use Twitch's built-in reporting and blocking tools.
+
+**Q: Is there an age restriction for using this extension?**  
+UniCat Cafe contains no age-restricted content and is suitable for all ages. Age verification and content rating enforcement are managed by the Twitch platform and, on mobile, by the iOS App Store and Google Play Store.
+
+
 ---
 
 ## Need Help?
