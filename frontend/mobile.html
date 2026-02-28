@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cat Cafe - Mobile</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            /* Prevent text selection on tap */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #fde2e4;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 9px;
+            line-height: 1.5;
+            padding: 12px;
+            /* Prevent overscroll bounce on iOS */
+            overscroll-behavior: none;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .panel-title {
+            text-align: center;
+            color: #7d5a6b;
+            margin-bottom: 6px;
+            /* Using petal-frost for shadow */
+            text-shadow: 1px 1px 0 #fad2e1;
+            font-size: 14px;
+        }
+
+        .panel-logo {
+            display: flex;
+            justify-content: center;
+            height: 100px;
+            width: auto;
+            margin-bottom: 8px;
+        }
+
+        .item-count {
+            text-align: center;
+            color: #9d7689;
+            font-size: 8px;
+            margin-bottom: 10px;
+        }
+
+        /* Category Tabs - larger for touch */
+        .category-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .category-tab {
+            background: #fff1e6;
+            border: 3px solid #d4a5bc;
+            color: #9d7689;
+            /* Larger padding for touch targets */
+            padding: 10px 14px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 6px;
+            box-shadow: 2px 2px 0 #b8879d;
+            transition: all 0.15s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            /* Ensure minimum 44px touch target height */
+            min-height: 44px;
+            min-width: 85px;
+            justify-content: center;
+        }
+
+        /* No hover states on mobile - use active instead */
+        .category-tab:active {
+            transform: translate(2px, 2px);
+            box-shadow: none;
+        }
+
+        .category-tab.active {
+            background: #fad2e1;
+            color: #7d5a6b;
+            border-color: #b8879d;
+            box-shadow: inset 2px 2px 0 rgba(0,0,0,0.1);
+        }
+
+        .tab-text {
+            font-weight: bolder;
+            font-size: 7px;
+        }
+
+        .tab-count {
+            font-size: 6px;
+            opacity: 0.8;
+        }
+
+        /* Empty category state */
+        .empty-category {
+            text-align: center;
+            padding: 30px 20px;
+            background: #fff1e6;
+            border: 3px dashed #d4a5bc;
+            border-radius: 8px;
+        }
+
+        .empty-img-icon {
+            height: 40px;
+            width: auto;
+            margin-bottom: 10px;
+        }
+
+        .empty-text {
+            color: #9d7689;
+            font-size: 6px;
+            line-height: 1.8;
+        }
+
+        /* Menu Items */
+        .menu-item {
+            background: #fff1e6;
+            border: 3px solid #d4a5bc;
+            /* More padding for comfortable mobile reading */
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow:
+                2px 2px 0 #b8879d,
+                inset -1px -1px 0 rgba(0,0,0,0.08);
+        }
+
+        .menu-item:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 #b8879d;
+        }
+
+        .menu-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .item-name {
+            /* Slightly larger for mobile readability */
+            font-size: 10px;
+            font-weight: bold;
+            color: #7d5a6b;
+            flex: 1;
+            line-height: 1.6;
+        }
+
+        .info-toggle {
+            background: rgba(255, 182, 193, 0.3);
+            border: 2px solid rgba(255, 182, 193, 0.6);
+            border-radius: 3px;
+            /* Larger touch target */
+            padding: 6px 10px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            color: #8B7355;
+            transition: all 0.1s ease;
+            margin-left: 8px;
+            /* Minimum touch target */
+            min-height: 34px;
+            min-width: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-toggle:active {
+            background: rgba(255, 182, 193, 0.5);
+            transform: translateY(1px);
+        }
+
+        .item-description {
+            color: #9d7689;
+            font-size: 7px;
+            margin-bottom: 10px;
+            line-height: 1.8;
+            animation: slideDown 0.2s ease;
+        }
+
+        .item-description.hidden {
+            display: none;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .order-button {
+            background: #fad2e1;
+            border: 3px solid #d4a5bc;
+            color: #7d5a6b;
+            /* Taller button for touch */
+            padding: 12px 16px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 9px;
+            font-weight: 600;
+            width: 100%;
+            box-shadow:
+                2px 2px 0 #b8879d,
+                inset -1px -1px 0 rgba(255,255,255,0.3);
+            transition: all 0.1s ease;
+            /* Minimum touch target */
+            min-height: 44px;
+        }
+
+        .order-button:active {
+            transform: translate(2px, 2px);
+            box-shadow: none;
+        }
+
+        .order-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .cooldown-info {
+            background: #eae4e9;
+            border: 2px solid #d4a5bc;
+            padding: 10px;
+            margin-top: 12px;
+            text-align: center;
+            font-size: 8px;
+            color: #9d7689;
+        }
+
+        .loading-message {
+            text-align: center;
+            color: #9d7689;
+            font-size: 7px;
+            padding: 20px;
+        }
+
+        .error-message {
+            background: #ffcccc;
+            border: 2px solid #ff9999;
+            color: #661111;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 7px;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        /* Notification - adjusted for mobile (top center instead of top right) */
+        .notification {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 16px;
+            border: 3px solid #d4a5bc;
+            font-size: 7px;
+            z-index: 9999;
+            width: calc(100% - 24px);
+            max-width: 360px;
+            box-shadow: 3px 3px 0 #b8879d;
+            text-align: center;
+            animation: slideInTop 0.3s ease;
+        }
+
+        .notification.success {
+            background: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+
+        .notification.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+
+        .notification.warning {
+            background: #fff3cd;
+            color: #856404;
+            border-color: #ffeeba;
+        }
+
+        .auth-required {
+            text-align: center;
+            padding: 30px 16px;
+            background: #fff1e6;
+            border: 3px solid #d4a5bc;
+            margin-top: 16px;
+            box-shadow: 2px 2px 0 #b8879d;
+        }
+
+        .auth-img-icon {
+            height: 50px;
+            width: auto;
+            margin-bottom: 10px;
+        }
+
+        .auth-icon {
+            height: 40px;
+            margin-bottom: 10px;
+        }
+
+        .auth-title {
+            font-size: 10px;
+            color: #7d5a6b;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+
+        .auth-message {
+            font-size: 7px;
+            color: #9d7689;
+            line-height: 2;
+            margin-bottom: 15px;
+        }
+
+        .auth-button {
+            background: #fad2e1;
+            border: 3px solid #d4a5bc;
+            color: #7d5a6b;
+            /* Larger touch target */
+            padding: 12px 20px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 7px;
+            box-shadow: 2px 2px 0 #b8879d;
+            transition: all 0.1s ease;
+            margin-bottom: 12px;
+            min-height: 44px;
+            width: 100%;
+        }
+
+        .auth-button:active {
+            transform: translate(2px, 2px);
+            box-shadow: none;
+        }
+
+        .auth-note {
+            font-size: 6px;
+            color: #9d7689;
+            line-height: 2;
+            margin-top: 12px;
+        }
+
+        @keyframes slideInTop {
+            from {
+                transform: translateX(-50%) translateY(-60px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* ui.js calls 'slideOut' by name, so we redefine it here for mobile */
+        @keyframes slideOut {
+            from {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-50%) translateY(-60px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="panel-title">UNICAT CAFE</div>
+    <div class="panel-logo">
+        <img
+            src="assets/menu_header.png"
+            alt="UniCat Mug"
+            style="height: auto; width: auto;"
+        />
+    </div>
+    <div id="itemCount" class="item-count">Loading...</div>
+
+    <!--   Category Tabs   -->
+    <div id="categoryTabs" class="category-tabs"></div>
+
+    <!--  Menu Display  -->
+    <div id="menuDisplay">
+        <div class="loading-message">Loading menu...</div>
+    </div>
+
+    <div id="cooldownDisplay"></div>
+</div>
+
+<!-- Load utility files first -->
+<script src="utils/panel/auth.js"></script>
+<script src="utils/panel/cooldown.js"></script>
+<script src="utils/panel/api.js"></script>
+<script src="utils/panel/ui.js"></script>
+<script src="utils/panel/menu.js"></script>
+
+<!-- Load main panel logic last -->
+<script src="panel.js"></script>
+</body>
+</html>
