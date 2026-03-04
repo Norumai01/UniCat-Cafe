@@ -3,6 +3,39 @@
 const COOLDOWN_DURATION = 60 * 1000; // 1 minute in milliseconds
 
 /**
+ * Safe localStorage wrapper to handle environments where
+ * localStorage may be unavailable or restricted (e.g. mobile WebViews).
+ * Falls back gracefully so the panel still loads without crashing.
+ */
+const safeStorage = {
+  get(key) {
+    try {
+      return localStorage.getItem(key);
+    }
+    catch (e) {
+      console.warn('⚠️ localStorage.getItem unavailable:', e);
+      return null;
+    }
+  },
+  set(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    }
+    catch (e) {
+      console.warn('⚠️ localStorage.setItem unavailable:', e);
+    }
+  },
+  remove(key) {
+    try {
+      localStorage.removeItem(key);
+    }
+    catch (e) {
+      console.warn('⚠️ localStorage.removeItem unavailable:', e);
+    }
+  }
+};
+
+/**
  * Gets the cooldown key for localStorage
  * @param {string} channelId - Twitch channel ID
  * @returns {string} Cooldown key
@@ -18,7 +51,7 @@ function getCooldownKey(channelId) {
  */
 function getRemainingCooldown(channelId) {
   const cooldownKey = getCooldownKey(channelId);
-  const lastOrderTime = localStorage.getItem(cooldownKey);
+  const lastOrderTime = safeStorage.get(cooldownKey);
 
   if (!lastOrderTime) {
     return 0;
@@ -36,7 +69,7 @@ function getRemainingCooldown(channelId) {
  */
 function setCooldown(channelId) {
   const cooldownKey = getCooldownKey(channelId);
-  localStorage.setItem(cooldownKey, Date.now().toString());
+  safeStorage.set(cooldownKey, Date.now().toString());
 }
 
 /**
@@ -45,7 +78,7 @@ function setCooldown(channelId) {
  */
 function clearCooldown(channelId) {
   const cooldownKey = getCooldownKey(channelId);
-  localStorage.removeItem(cooldownKey);
+  safeStorage.remove(cooldownKey);
 }
 
 /**

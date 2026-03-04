@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Cat Cafe Panel</title>
+    <title>Cat Cafe - Mobile</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
     <style>
         @font-face {
@@ -18,19 +18,22 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            /* Prevent text selection on tap */
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            /* Using soft-blush as main background */
             background: #fde2e4;
             font-family: 'Press Start 2P', cursive;
-            font-size: 8px;
+            font-size: 9px;
             line-height: 1.5;
-            padding: 15px;
+            padding: 12px;
+            /* Prevent overscroll bounce on iOS */
+            overscroll-behavior: none;
         }
 
         .container {
-            max-width: 500px;
+            max-width: 100%;
             margin: 0 auto;
         }
 
@@ -40,15 +43,15 @@
             margin-bottom: 6px;
             /* Using petal-frost for shadow */
             text-shadow: 1px 1px 0 #fad2e1;
-            font-size: 16px;
+            font-size: 14px;
         }
 
         .panel-logo {
             display: flex;
             justify-content: center;
-            height: 110px;
+            height: 100px;
             width: auto;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .item-count {
@@ -58,11 +61,11 @@
             margin-bottom: 10px;
         }
 
-        /* Category Tabs */
+        /* Category Tabs - larger for touch */
         .category-tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
+            gap: 6px;
+            margin-bottom: 14px;
             justify-content: center;
             flex-wrap: wrap;
         }
@@ -71,7 +74,8 @@
             background: #fff1e6;
             border: 3px solid #d4a5bc;
             color: #9d7689;
-            padding: 8px 12px;
+            /* Larger padding for touch targets */
+            padding: 10px 14px;
             cursor: pointer;
             font-family: 'Press Start 2P', cursive;
             font-size: 6px;
@@ -81,15 +85,13 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
-            min-width: 80px;
+            /* Ensure minimum 44px touch target height */
+            min-height: 44px;
+            min-width: 85px;
+            justify-content: center;
         }
 
-        .category-tab:hover {
-            background: #f0efeb;
-            transform: translate(-1px, -1px);
-            box-shadow: 3px 3px 0 #b8879d;
-        }
-
+        /* No hover states on mobile - use active instead */
         .category-tab:active {
             transform: translate(2px, 2px);
             box-shadow: none;
@@ -99,13 +101,6 @@
             background: #fad2e1;
             color: #7d5a6b;
             border-color: #b8879d;
-            box-shadow: inset 2px 2px 0 rgba(0,0,0,0.1);
-            transform: none;
-        }
-
-        .category-tab.active:hover {
-            background: #fad2e1;
-            transform: none;
             box-shadow: inset 2px 2px 0 rgba(0,0,0,0.1);
         }
 
@@ -122,7 +117,7 @@
         /* Empty category state */
         .empty-category {
             text-align: center;
-            padding: 40px 20px;
+            padding: 30px 20px;
             background: #fff1e6;
             border: 3px dashed #d4a5bc;
             border-radius: 8px;
@@ -142,24 +137,19 @@
 
         /* Menu Items */
         .menu-item {
-            /* Using linen for menu items */
             background: #fff1e6;
             border: 3px solid #d4a5bc;
-            padding: 12px;
+            /* More padding for comfortable mobile reading */
+            padding: 14px;
             margin-bottom: 12px;
             box-shadow:
                     2px 2px 0 #b8879d,
                     inset -1px -1px 0 rgba(0,0,0,0.08);
-            transition: all 0.15s ease;
         }
 
-        .menu-item:hover {
-            /* Using parchment on hover */
-            background: #f0efeb;
-            transform: translate(-1px, -1px);
-            box-shadow:
-                    3px 3px 0 #b8879d,
-                    inset -1px -1px 0 rgba(0,0,0,0.08);
+        .menu-item:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 #b8879d;
         }
 
         .menu-item.disabled {
@@ -176,39 +166,44 @@
         }
 
         .item-name {
-            font-size: 9px;
+            /* Slightly larger for mobile readability */
+            font-size: 10px;
             font-weight: bold;
             color: #7d5a6b;
             flex: 1;
+            line-height: 1.6;
         }
 
         .info-toggle {
             background: rgba(255, 182, 193, 0.3);
             border: 2px solid rgba(255, 182, 193, 0.6);
             border-radius: 3px;
-            padding: 3px 7px;
+            /* Larger touch target */
+            padding: 6px 10px;
             cursor: pointer;
             font-family: 'Press Start 2P', cursive;
-            font-size: 6px;
+            font-size: 8px;
             color: #8B7355;
             transition: all 0.1s ease;
             margin-left: 8px;
-        }
-
-        .info-toggle:hover {
-            background: rgba(255, 182, 193, 0.5);
-            border-color: rgba(255, 182, 193, 0.8);
+            /* Minimum touch target */
+            min-height: 34px;
+            min-width: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .info-toggle:active {
+            background: rgba(255, 182, 193, 0.5);
             transform: translateY(1px);
         }
 
         .item-description {
             color: #9d7689;
             font-size: 7px;
-            margin-bottom: 8px;
-            line-height: 1.6;
+            margin-bottom: 10px;
+            line-height: 1.8;
             animation: slideDown 0.2s ease;
         }
 
@@ -228,24 +223,22 @@
         }
 
         .order-button {
-            /* Using petal-frost for button */
             background: #fad2e1;
             border: 3px solid #d4a5bc;
             color: #7d5a6b;
-            padding: 8px 16px;
+            /* Taller button for touch */
+            padding: 12px 16px;
             cursor: pointer;
             font-family: 'Press Start 2P', cursive;
-            font-size: 8px;
+            font-size: 9px;
             font-weight: 600;
             width: 100%;
             box-shadow:
                     2px 2px 0 #b8879d,
                     inset -1px -1px 0 rgba(255,255,255,0.3);
             transition: all 0.1s ease;
-        }
-
-        .order-button:hover {
-            background: #f5c2d6;
+            /* Minimum touch target */
+            min-height: 44px;
         }
 
         .order-button:active {
@@ -259,20 +252,19 @@
         }
 
         .cooldown-info {
-            /* Using lavender-mist for cooldown */
             background: #eae4e9;
             border: 2px solid #d4a5bc;
-            padding: 8px;
+            padding: 10px;
             margin-top: 12px;
             text-align: center;
-            font-size: 7px;
+            font-size: 8px;
             color: #9d7689;
         }
 
         .loading-message {
             text-align: center;
             color: #9d7689;
-            font-size: 6px;
+            font-size: 7px;
             padding: 20px;
         }
 
@@ -280,24 +272,28 @@
             background: #ffcccc;
             border: 2px solid #ff9999;
             color: #661111;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 12px;
-            font-size: 6px;
+            font-size: 7px;
             text-align: center;
+            line-height: 1.8;
         }
 
-        /* Notification styles */
+        /* Notification - adjusted for mobile (top center instead of top right) */
         .notification {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
             padding: 12px 16px;
             border: 3px solid #d4a5bc;
             font-size: 7px;
             z-index: 9999;
-            max-width: 250px;
+            width: calc(100% - 24px);
+            max-width: 360px;
             box-shadow: 3px 3px 0 #b8879d;
-            animation: slideIn 0.3s ease;
+            text-align: center;
+            animation: slideInTop 0.3s ease;
         }
 
         .notification.success {
@@ -320,10 +316,10 @@
 
         .auth-required {
             text-align: center;
-            padding: 30px 20px;
+            padding: 30px 16px;
             background: #fff1e6;
             border: 3px solid #d4a5bc;
-            margin-top: 20px;
+            margin-top: 16px;
             box-shadow: 2px 2px 0 #b8879d;
         }
 
@@ -348,7 +344,7 @@
         .auth-message {
             font-size: 7px;
             color: #9d7689;
-            line-height: 1.8;
+            line-height: 2;
             margin-bottom: 15px;
         }
 
@@ -356,17 +352,16 @@
             background: #fad2e1;
             border: 3px solid #d4a5bc;
             color: #7d5a6b;
-            padding: 10px 20px;
+            /* Larger touch target */
+            padding: 12px 20px;
             cursor: pointer;
             font-family: 'Press Start 2P', cursive;
             font-size: 7px;
             box-shadow: 2px 2px 0 #b8879d;
             transition: all 0.1s ease;
             margin-bottom: 12px;
-        }
-
-        .auth-button:hover {
-            background: #f5c2d6;
+            min-height: 44px;
+            width: 100%;
         }
 
         .auth-button:active {
@@ -377,7 +372,7 @@
         .auth-note {
             font-size: 6px;
             color: #9d7689;
-            line-height: 1.8;
+            line-height: 2;
             margin-top: 12px;
         }
 
@@ -396,44 +391,62 @@
             100% { opacity: 0.2; }
         }
 
-        @keyframes slideIn {
+        /* Landscape orientation - reduce vertical space consumption */
+        @media (orientation: landscape) {
+            body {
+                padding: 6px 12px;
+            }
+
+            .panel-title {
+                font-size: 11px;
+                margin-bottom: 4px;
+            }
+
+            .panel-logo {
+                height: 50px;
+                margin-bottom: 5px;
+            }
+
+            .item-count {
+                margin-bottom: 6px;
+            }
+
+            .category-tabs {
+                margin-bottom: 8px;
+            }
+
+            .menu-item {
+                padding: 10px 14px;
+                margin-bottom: 8px;
+            }
+
+            .order-button {
+                padding: 8px 16px;
+                min-height: 44px;
+            }
+        }
+
+        @keyframes slideInTop {
             from {
-                transform: translateX(300px);
+                transform: translateX(-50%) translateY(-60px);
                 opacity: 0;
             }
             to {
-                transform: translateX(0);
+                transform: translateX(-50%) translateY(0);
                 opacity: 1;
             }
         }
 
+        /* ui.js calls 'slideOut' by name, so we redefine it here for mobile */
         @keyframes slideOut {
             from {
-                transform: translateX(0);
+                transform: translateX(-50%) translateY(0);
                 opacity: 1;
             }
             to {
-                transform: translateX(300px);
+                transform: translateX(-50%) translateY(-60px);
                 opacity: 0;
             }
-        }
-
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #fef6f8;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #f5c2d6;
-            border-radius: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #d4a5bc;
         }
     </style>
 </head>
