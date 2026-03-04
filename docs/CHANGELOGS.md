@@ -15,3 +15,4 @@
 - Added a loading transition before the order is placed, so users will know if they have placed order or not
 - Reduced the size of image assets to reduce storage sizes that bypass Twitch Mobile CDN limits.
 - Self-hosted the font to increase initial load-up time.
+- Updated policy guidelines and manual.
