@@ -93,6 +93,7 @@ export default async function handler(req, res) {
     ===================================================
     */
     const { item, username, category } = req.body;
+
     if (!item || !username || !category) {
       return res.status(400).json({
         error: "Missing required parameters.",
@@ -115,10 +116,14 @@ export default async function handler(req, res) {
       });
     }
 
-    if (!['Food', 'Drink', 'Sub Combo'].includes(category)) {
+    // Category is now a dynamic ID (e.g. 'cat_1', 'cat_1748392039123').
+    // We trust the JWT-authenticated request and validate the category format only.
+    // The backend looks up the actual message from the streamer's config, so an
+    // unknown ID will just fall back to the default message — no spoofing risk.
+    if (typeof category !== 'string' || category.length > 50 || !/^[a-zA-Z0-9_]+$/.test(category)) {
       return res.status(400).json({
         error: "Invalid category",
-        details: "Category must be Food, Drink, or Sub Combo"
+        details: "Category must be a valid identifier string"
       });
     }
 
@@ -181,9 +186,7 @@ async function sendMessageWithRetry(clientId, botToken, channelId, botId, messag
   let response = await sendChatMessage(clientId, botToken, channelId, botId, message);
   let data = await parseResponse(response);
 
-  if (response.ok) {
-    return data;
-  }
+  if (response.ok) return data;
 
   // Handle 401 with token refresh and retry
   if (response.status === 401) {
