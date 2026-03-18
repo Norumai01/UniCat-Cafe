@@ -290,19 +290,109 @@
             text-transform: uppercase;
         }
 
-        .item-category-badge.drink {
-            background: #e3f2fd;
-            color: #1976d2;
+        /* Dynamic category badge palette (5 colors, cycles by index) */
+        .item-category-badge.palette-0 { background: #fff3e0; color: #f57c00; }
+        .item-category-badge.palette-1 { background: #e3f2fd; color: #1976d2; }
+        .item-category-badge.palette-2 { background: #f3e5f5; color: #7b1fa2; }
+        .item-category-badge.palette-3 { background: #e8f5e9; color: #2e7d32; }
+        .item-category-badge.palette-4 { background: #fce4ec; color: #c62828; }
+
+        /* ── Category Manager (Categories Tab) ── */
+        .category-entry {
+            background: white;
+            border: 2px solid #f5c2d6;
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
         }
 
-        .item-category-badge.food {
-            background: #fff3e0;
-            color: #f57c00;
+        .category-entry-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
         }
 
-        .item-category-badge.sub-combo {
-            background: #f3e5f5;
-            color: #7b1fa2;
+        .category-color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .color-index-0 { background: #f57c00; }
+        .color-index-1 { background: #1976d2; }
+        .color-index-2 { background: #7b1fa2; }
+        .color-index-3 { background: #2e7d32; }
+        .color-index-4 { background: #c62828; }
+
+        .category-label-input {
+            flex: 1;
+            padding: 7px 10px;
+            font-size: 14px;
+            border: 2px solid #e8d4dc;
+            border-radius: 5px;
+            color: #5a4451;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 200px;
+        }
+
+        .category-label-input:focus {
+            outline: none;
+            border-color: #d4a5bc;
+        }
+
+        .category-item-count {
+            font-size: 11px;
+            color: #9d7689;
+            white-space: nowrap;
+        }
+
+        .category-entry-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .add-category-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .add-category-row input {
+            flex: 1;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 2px solid #e8d4dc;
+            border-radius: 6px;
+            color: #5a4451;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .add-category-row input:focus {
+            outline: none;
+            border-color: #d4a5bc;
+        }
+
+        .category-tip {
+            background: #fff8e1;
+            border-left: 4px solid #f9a825;
+            padding: 10px 14px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #6d4c00;
+            margin-bottom: 16px;
+            line-height: 1.5;
         }
 
         .item-info-desc {
@@ -569,6 +659,7 @@
     <!-- Tab Navigation -->
     <div class="tab-nav">
         <button class="tab-button active" data-tab="menu-tab">Menu Items</button>
+        <button class="tab-button" data-tab="categories-tab">Categories</button>
         <button class="tab-button" data-tab="messages-tab">Chat Messages</button>
     </div>
 
@@ -588,10 +679,8 @@
 
             <div class="form-group">
                 <label class="form-label">Category</label>
-                <select id="itemCategory" class="form-select">
-                    <option value="Food">Food</option>
-                    <option value="Drink">Drink</option>
-                    <option value="Sub Combo">Sub Combo</option>
+                <select id="itemCategory" class="form-select category-select">
+                    <!-- Populated dynamically by config.js populateCategorySelect() -->
                 </select>
                 <div class="form-help">Choose which category this item belongs to</div>
             </div>
@@ -634,6 +723,35 @@
         </div>
     </div>
 
+    <!-- Categories Tab -->
+    <div id="categories-tab" class="tab-content" style="padding-top: 10px;">
+        <div class="section">
+            <div class="section-title">Manage Categories</div>
+
+            <div class="category-tip">
+                💡 Categories are the tabs viewers see on your menu panel (e.g. Food, Drink).
+                Renaming a category updates everywhere automatically — items and messages stay linked.
+                Deleting a category will also delete all items inside it.
+            </div>
+
+            <div id="categoryList">
+                <div class="empty-state">Loading categories...</div>
+            </div>
+
+            <div class="add-category-row">
+                <input
+                        type="text"
+                        id="newCategoryName"
+                        placeholder="New category name (e.g. Desserts)"
+                        maxlength="20"
+                />
+                <button id="addCategoryButton" class="btn btn-primary">
+                    Add Category
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Chat Messages Tab -->
     <div id="messages-tab" class="tab-content" style="padding-top: 10px;">
         <div class="section">
@@ -672,6 +790,8 @@
 <script src="utils/config/ui.js"></script>
 <script src="utils/config/validation.js"></script>
 <script src="utils/config/tabs.js"></script>
+<script src="utils/config/categories.js"></script>
+<script src="utils/config/messages.js"></script>
 <script src="config.js"></script>
 </body>
 </html>

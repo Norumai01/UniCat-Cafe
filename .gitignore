@@ -98,3 +98,4 @@ node_modules
 Thumbs.db
 /frontend/extension.zip
 /frontend/utils/panel/api.js
+/frontend/utils/panel/api-production.js

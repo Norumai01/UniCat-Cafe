@@ -1,3 +1,7 @@
+/**
+ * Cat Cafe Panel - UI cUtilities
+ */
+
 //console.log('🎨 UI utility loaded');
 
 /**

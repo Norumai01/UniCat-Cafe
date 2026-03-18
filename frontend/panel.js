@@ -3,6 +3,7 @@
 // Global state
 let twitchAuth = null;
 let allMenuItems = [];
+let allCategories = [];
 let groupedMenuItems = {};
 let viewerDisplayName = 'Viewer'; // Default fallback
 let cooldownTimer = null;
@@ -50,23 +51,26 @@ window.Twitch.ext.onAuthorized(async (auth) => {
 
 // Load menu configuration and display it
 function loadAndDisplayMenu() {
-  allMenuItems = loadMenuConfig();
+  const menuConfig = loadMenuConfig();
 
-  if (allMenuItems && allMenuItems.length > 0) {
-    // Group items by category
-    groupedMenuItems = groupItemsByCategory(allMenuItems);
+  if (menuConfig && menuConfig.menuItems.length > 0) {
+    allMenuItems = menuConfig.menuItems;
+    allCategories = menuConfig.categories;
+
+    // Group items by category ID
+    groupedMenuItems = groupItemsByCategory(allMenuItems, allCategories);
 
     // Display category tabs
-    displayCategoryTabs(groupedMenuItems, handleTabClick);
+    displayCategoryTabs(groupedMenuItems, allCategories, handleTabClick);
 
     // Display items for current category
     const currentCategory = getCurrentCategory();
-    displayMenuItems(groupedMenuItems[currentCategory], handleOrderClick);
+    displayMenuItems(groupedMenuItems[currentCategory] || [], handleOrderClick);
 
     // Update item count
-    updateItemCount(allMenuItems.length, groupedMenuItems[currentCategory].length);
+    updateItemCount(allMenuItems.length, (groupedMenuItems[currentCategory] || []).length);
   }
-  else if (allMenuItems === null) {
+  else if (menuConfig === null) {
     showError('Streamer needs to configure menu items!');
   }
   else {
@@ -92,10 +96,10 @@ function handleTabClick(category) {
   });
 
   // Display items for new category
-  displayMenuItems(groupedMenuItems[category], handleOrderClick);
+  displayMenuItems(groupedMenuItems[category] || [], handleOrderClick);
 
   // Update item count
-  updateItemCount(allMenuItems.length, groupedMenuItems[category].length);
+  updateItemCount(allMenuItems.length, (groupedMenuItems[category] || []).length);
 }
 
 // Check if user is on cooldown when panel loads
@@ -142,7 +146,7 @@ async function handleOrderClick(item, button) {
 
   // Extract item details
   const itemName = item.name;
-  const itemCategory = item.category || 'Food'; // Default to Food if missing
+  const itemCategory = item.category; // Category ID (e.g. 'cat_1')
 
   // console.log(`📤 Ordering: ${itemName} (${itemCategory})`);
   // console.log('👤 Using username:', viewerDisplayName);

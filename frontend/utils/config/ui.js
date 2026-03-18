@@ -15,21 +15,21 @@ function escapeHtml(text) {
 }
 
 /**
- * Gets the CSS class for a category badge
- * @param {string} category - Category name
+ * Gets the CSS class for a category badge using a 5-color palette by index.
+ * Categories are now dynamic so we cycle palette-0..palette-4 instead of
+ * switching on hardcoded names.
+ * @param {string} categoryId - Category ID
  * @returns {string} - CSS class name
  */
-function getCategoryBadgeClass(category) {
-  switch(category) {
-    case 'Drink':
-      return 'drink';
-    case 'Food':
-      return 'food';
-    case 'Sub Combo':
-      return 'sub-combo';
-    default:
-      return 'food';
+function getCategoryBadgeClass(categoryId) {
+  // `categories` is the live array from config.js (same global scope)
+  if (typeof categories !== 'undefined') {
+    const index = categories.findIndex(c => c.id === categoryId);
+    if (index !== -1) {
+      return `palette-${index % 5}`;
+    }
   }
+  return 'palette-0';
 }
 
 /**
@@ -48,37 +48,36 @@ function renderMenuItems() {
     return;
   }
 
-  // Group items by category for organized display
-  const grouped = {
-    'Food': [],
-    'Drink': [],
-    'Sub Combo': []
-  };
+  // Group items by category ID, following the categories array order
+  const grouped = {};
+  categories.forEach(cat => { grouped[cat.id] = []; });
 
   menuItems.forEach(item => {
-    const category = item.category || 'Food';
-    if (grouped[category]) {
-      grouped[category].push(item);
+    const catId = item.category;
+    if (grouped[catId] !== undefined) {
+      grouped[catId].push(item);
+    }
+    else {
+      // Orphaned item (category deleted) — bucket into first category as fallback
+      const firstId = categories[0]?.id;
+      if (firstId) grouped[firstId].push(item);
     }
   });
 
   let html = '';
 
-  // Render each category
-  ['Food', 'Drink', 'Sub Combo'].forEach(category => {
-    const items = grouped[category];
+  // Render each category in order
+  categories.forEach(cat => {
+    (grouped[cat.id] || []).forEach(item => {
+      const isEditing = editingItemId === item.id;
 
-    if (items.length > 0) {
-      items.forEach(item => {
-        const isEditing = editingItemId === item.id;
-
-        if (isEditing) {
-          html += renderEditForm(item);
-        } else {
-          html += renderMenuItem(item);
-        }
-      });
-    }
+      if (isEditing) {
+        html += renderEditForm(item);
+      }
+      else {
+        html += renderMenuItem(item);
+      }
+    });
   });
 
   list.innerHTML = html;
@@ -91,14 +90,15 @@ function renderMenuItems() {
  * @returns {string} - HTML string
  */
 function renderMenuItem(item) {
-  const badgeClass = getCategoryBadgeClass(item.category || 'Food');
+  const badgeClass = getCategoryBadgeClass(item.category);
+  const label = typeof getCategoryLabel === 'function' ? getCategoryLabel(item.category) : item.category;
 
   return `
     <div class="menu-item-entry" data-item-id="${item.id}">
       <div class="item-info">
         <div class="item-info-header">
           <span class="item-info-name">${escapeHtml(item.name)}</span>
-          <span class="item-category-badge ${badgeClass}">${escapeHtml(item.category || 'Food')}</span>
+          <span class="item-category-badge ${badgeClass}">${escapeHtml(label)}</span>
         </div>
         <div class="item-info-desc">${escapeHtml(item.description)}</div>
       </div>
@@ -115,7 +115,8 @@ function renderMenuItem(item) {
 }
 
 /**
- * Renders a menu item in edit mode
+ * Renders a menu item in edit mode.
+ * Category <select> options are populated by populateCategorySelect() after render.
  * @param {Object} item - Menu item object
  * @returns {string} - HTML string
  */
@@ -129,10 +130,8 @@ function renderEditForm(item) {
         
         <div class="edit-form-group">
           <label class="edit-form-label">Category</label>
-          <select id="edit-category-${item.id}" class="edit-form-select">
-            <option value="Food" ${item.category === 'Food' ? 'selected' : ''}>Food</option>
-            <option value="Drink" ${item.category === 'Drink' ? 'selected' : ''}>Drink</option>
-            <option value="Sub Combo" ${item.category === 'Sub Combo' ? 'selected' : ''}>Sub Combo</option>
+          <select id="edit-category-${item.id}" class="edit-form-select category-select">
+            <!-- Populated by populateCategorySelect() after render -->
           </select>
         </div>
 
