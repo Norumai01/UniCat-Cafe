@@ -1,24 +1,17 @@
 //console.log('🐱 Cat Cafe Config script loaded');
 
+// ─── State ────────────────────────────────────────────────────────────────────
+
 let menuItems = [];
 let editingItemId = null; // Track which item is being edited
 
-// Default category messages
-const DEFAULT_MESSAGES = {
-  'Food': '@{username} has ordered {item}. Enjoy your meal!',
-  'Drink': '@{username} has ordered {item}. Stay hydrated!',
-  'Sub Combo': '@{username} ordered the special {item}!'
-};
+// categoryMessages, failMessages, categories, DEFAULT_CATEGORIES and
+// buildDefaultMessages are declared in utils/config/categories.js
 
-// Default fail messages
-const DEFAULT_FAIL_MESSAGES = {
-  'Food': 'Oh no! @{username} dropped the {item} on the floor!',
-  'Drink': '@{username}\'s {item} spilled everywhere! Better luck next time!',
-  'Sub Combo': 'The kitchen ran out of ingredients for {item}! Sorry @{username}!'
-};
+let categoryMessages = {};
+let failMessages = {};
 
-let categoryMessages = { ...DEFAULT_MESSAGES };
-let failMessages = { ...DEFAULT_FAIL_MESSAGES };
+// ─── Init ─────────────────────────────────────────────────────────────────────
 
 window.Twitch.ext.onAuthorized(() => {
   //console.log('✅ Authorized!');
@@ -28,36 +21,99 @@ window.Twitch.ext.onAuthorized(() => {
   document.getElementById('addItemButton').addEventListener('click', addMenuItem);
   document.getElementById('saveButton').addEventListener('click', saveConfig);
   document.getElementById('resetMessagesButton').addEventListener('click', resetMessages);
+  document.getElementById('addCategoryButton').addEventListener('click', addCategory);
 });
 
+/**
+ * Loads existing config from Twitch Configuration Service.
+ * Handles legacy migration and first-install seeding.
+ */
 function loadExisting() {
   const config = window.Twitch.ext.configuration.broadcaster;
+
   if (config && config.content) {
     const data = JSON.parse(config.content);
     //console.log('Existing config:', data);
-    menuItems = data.menuItems || [];
 
-    // Load category messages or use defaults
-    categoryMessages = data.categoryMessages || { ...DEFAULT_MESSAGES };
-    failMessages = data.failMessages || { ...DEFAULT_FAIL_MESSAGES };
+    // ── Migrate legacy configs (no categories array = pre-dynamic-categories save) ──
+    if (!data.categories) {
+      categories = DEFAULT_CATEGORIES.map(c => ({ ...c }));
 
-    renderMenuItems();
-    renderMessageTemplates();
-    renderFailMessageTemplates();
+      const { success: defSuccess, fail: defFail } = buildDefaultMessages(categories);
+      const labelToId = {};
+      categories.forEach(c => { labelToId[c.label] = c.id; });
+
+      categoryMessages = {};
+      failMessages = {};
+
+      // Remap label-keyed messages → ID-keyed
+      if (data.categoryMessages) {
+        Object.entries(data.categoryMessages).forEach(([label, msg]) => {
+          const id = labelToId[label];
+          if (id) categoryMessages[id] = msg;
+        });
+      }
+      if (data.failMessages) {
+        Object.entries(data.failMessages).forEach(([label, msg]) => {
+          const id = labelToId[label];
+          if (id) failMessages[id] = msg;
+        });
+      }
+
+      // Fill any gaps with defaults
+      categories.forEach(cat => {
+        if (!categoryMessages[cat.id]) categoryMessages[cat.id] = defSuccess[cat.id];
+
+        if (!failMessages[cat.id]) failMessages[cat.id] = defFail[cat.id];
+      });
+
+      // Remap legacy label-stored items → ID-stored items
+      menuItems = (data.menuItems || []).map(item => ({
+        ...item,
+        category: labelToId[item.category] || 'cat_1'
+      }));
+    }
+    else {
+      // ── Normal load ───────────────────────────────────────────────────────
+      categories = data.categories;
+      menuItems = data.menuItems || [];
+
+      const { success: defSuccess, fail: defFail } = buildDefaultMessages(categories);
+      categoryMessages = data.categoryMessages || defSuccess;
+      failMessages = data.failMessages || defFail;
+
+      // Provision messages for any categories added since last save
+      categories.forEach(cat => {
+        if (!categoryMessages[cat.id]) categoryMessages[cat.id] = defSuccess[cat.id];
+
+        if (!failMessages[cat.id]) failMessages[cat.id] = defFail[cat.id];
+      });
+    }
   }
   else {
-    // No config yet, show defaults
-    renderMessageTemplates();
-    renderFailMessageTemplates();
+    // No config yet, seed defaults for first install
+    categories = DEFAULT_CATEGORIES.map(c => ({ ...c }));
+    const { success: defSuccess, fail: defFail } = buildDefaultMessages(categories);
+    categoryMessages = defSuccess;
+    failMessages = defFail;
+    menuItems = [];
   }
+
+  renderCategoryManager();
+  populateCategorySelect();
+  renderMenuItems();
+  renderMessageTemplates();
+  renderFailMessageTemplates();
 }
+
+// ─── Menu Items ───────────────────────────────────────────────────────────────
 
 function addMenuItem() {
   const categoryInput = document.getElementById('itemCategory');
   const nameInput = document.getElementById('itemName');
   const descriptionInput = document.getElementById('itemDescription');
 
-  const category = categoryInput.value;
+  const categoryId = categoryInput.value;
   const name = nameInput.value.trim();
   const description = descriptionInput.value.trim();
 
@@ -72,7 +128,7 @@ function addMenuItem() {
     id: Date.now(),
     name: name,
     description: description,
-    category: category,
+    category: categoryId,
     enabled: true
   };
 
@@ -85,7 +141,8 @@ function addMenuItem() {
   // Keep category selected for convenience
 
   renderMenuItems();
-  showStatus(`✅ "${name}" added to ${category}! Remember to save your changes.`, 'success');
+  renderCategoryManager();
+  showStatus(`✅ "${name}" added to ${getCategoryLabel(categoryId)}! Remember to save your changes.`, 'success');
 }
 
 function editMenuItem(id) {
@@ -105,6 +162,11 @@ function editMenuItem(id) {
   }
 
   renderMenuItems();
+  // Populate the edit form's category select after render, then restore selection
+  populateCategorySelect();
+  const editSelect = document.getElementById(`edit-category-${id}`);
+  if (editSelect) editSelect.value = item.category;
+
   showStatus(`Editing "${item.name}"`, 'success');
 }
 
@@ -113,7 +175,7 @@ function saveEdit(id) {
   const nameInput = document.getElementById(`edit-name-${id}`);
   const descriptionInput = document.getElementById(`edit-description-${id}`);
 
-  const category = categoryInput.value;
+  const categoryId = categoryInput.value;
   const name = nameInput.value.trim();
   const description = descriptionInput.value.trim();
 
@@ -131,13 +193,14 @@ function saveEdit(id) {
       ...menuItems[itemIndex],
       name: name,
       description: description,
-      category: category
+      category: categoryId
     };
 
     //console.log('Updated item:', menuItems[itemIndex]);
 
     editingItemId = null;
     renderMenuItems();
+    renderCategoryManager();
     showStatus(`✅ "${name}" updated! Remember to save your changes.`, 'success');
   }
 }
@@ -161,131 +224,22 @@ function removeMenuItem(id) {
   }
 
   renderMenuItems();
+  renderCategoryManager();
   showStatus(`✅ "${itemName}" removed! Remember to save your changes.`, 'success');
 }
 
-function renderMessageTemplates() {
-  const container = document.getElementById('messageTemplates');
-  if (!container) return;
-
-  container.innerHTML = '';
-
-  Object.keys(categoryMessages).forEach(category => {
-    const message = categoryMessages[category];
-
-    const categorySection = document.createElement('div');
-    categorySection.className = 'message-category-section';
-
-    categorySection.innerHTML = `
-      <div class="message-category-header">
-        <span class="message-category-title">${category}</span>
-      </div>
-      <div class="message-template-item">
-        <textarea 
-          class="message-template-input"
-          rows="2"
-          maxlength="300"
-          placeholder="e.g., @{username} ordered {item}!"
-          data-category="${category}"
-        >${message}</textarea>
-        <div class="message-template-help">
-          Use <code>{username}</code> for viewer name and <code>{item}</code> for menu item
-        </div>
-      </div>
-    `;
-
-    container.appendChild(categorySection);
-
-    // Attach event listener to textarea
-    const textarea = categorySection.querySelector('.message-template-input');
-    textarea.addEventListener('change', function() {
-      updateMessageTemplate(category, this.value);
-    });
-  });
-}
-
-function renderFailMessageTemplates() {
-  const container = document.getElementById('failMessageTemplates');
-  if (!container) return;
-
-  container.innerHTML = '';
-
-  Object.keys(failMessages).forEach(category => {
-    const message = failMessages[category];
-
-    const categorySection = document.createElement('div');
-    categorySection.className = 'message-category-section';
-
-    categorySection.innerHTML = `
-      <div class="message-category-header">
-        <span class="message-category-title">${category}</span>
-      </div>
-      <div class="message-template-item">
-        <textarea 
-          class="message-template-input fail-message-input"
-          rows="2"
-          maxlength="300"
-          placeholder="e.g., Oh no! @{username} dropped the {item}!"
-          data-category="${category}"
-        >${message}</textarea>
-        <div class="message-template-help">
-          Use <code>{username}</code> for viewer name and <code>{item}</code> for menu item
-        </div>
-      </div>
-    `;
-
-    container.appendChild(categorySection);
-
-    // Attach event listener to textarea
-    const textarea = categorySection.querySelector('.fail-message-input');
-    textarea.addEventListener('change', function() {
-      updateFailMessageTemplate(category, this.value);
-    });
-  });
-}
-
-function updateMessageTemplate(category, value) {
-  const trimmed = value.trim();
-
-  // Validate the template
-  const validation = validateMessageTemplate(trimmed);
-  if (!validation.isValid) {
-    showStatus(validation.error, 'error');
-    return;
-  }
-
-  categoryMessages[category] = trimmed;
-  //console.log(`Updated ${category} message:`, trimmed);
-}
-
-function updateFailMessageTemplate(category, value) {
-  const trimmed = value.trim();
-
-  // Validate the template
-  const validation = validateMessageTemplate(trimmed);
-  if (!validation.isValid) {
-    showStatus(validation.error, 'error');
-    return;
-  }
-
-  failMessages[category] = trimmed;
-  //console.log(`Updated ${category} fail message:`, trimmed);
-}
-
-function resetMessages() {
-  categoryMessages = { ...DEFAULT_MESSAGES };
-  failMessages = { ...DEFAULT_FAIL_MESSAGES };
-
-  renderMessageTemplates();
-  renderFailMessageTemplates();
-  showStatus('✅ Messages reset to defaults! Remember to save your changes.', 'success');
-}
+// ─── Save ─────────────────────────────────────────────────────────────────────
 
 function saveConfig() {
   // console.log('Saving config...');
   // console.log('Menu items to save:', menuItems);
   // console.log('Category messages to save:', categoryMessages);
   // console.log('Fail messages to save:', failMessages);
+
+  if (categories.length === 0) {
+    showStatus('⚠️ Add at least one category before saving', 'error');
+    return;
+  }
 
   if (menuItems.length === 0) {
     showStatus('⚠️ Add at least one menu item before saving', 'error');
@@ -302,19 +256,19 @@ function saveConfig() {
   let hasErrors = false;
 
   // Validate success messages
-  Object.keys(categoryMessages).forEach(category => {
-    const template = categoryMessages[category];
-    if (!template.includes('{username}') || !template.includes('{item}')) {
-      showStatus(`⚠️ ${category} message must include {username} and {item}`, 'error');
+  categories.forEach(cat => {
+    const template = categoryMessages[cat.id];
+    if (!template || !template.includes('{username}') || !template.includes('{item}')) {
+      showStatus(`⚠️ "${cat.label}" message must include {username} and {item}`, 'error');
       hasErrors = true;
     }
   });
 
   // Validate fail messages
-  Object.keys(failMessages).forEach(category => {
-    const template = failMessages[category];
-    if (!template.includes('{username}') || !template.includes('{item}')) {
-      showStatus(`⚠️ ${category} fail message must include {username} and {item}`, 'error');
+  categories.forEach(cat => {
+    const template = failMessages[cat.id];
+    if (!template || !template.includes('{username}') || !template.includes('{item}')) {
+      showStatus(`⚠️ "${cat.label}" fail message must include {username} and {item}`, 'error');
       hasErrors = true;
     }
   });
@@ -322,6 +276,7 @@ function saveConfig() {
   if (hasErrors) return;
 
   const configData = {
+    categories: categories,
     menuItems: menuItems,
     categoryMessages: categoryMessages,
     failMessages: failMessages,
@@ -338,21 +293,16 @@ function saveConfig() {
 
     //console.log('✅ Config saved!');
 
-    // Count items by category
-    const counts = {
-      'Food': 0,
-      'Drink': 0,
-      'Sub Combo': 0
-    };
-
+    // Count items by category dynamically
+    const counts = {};
+    categories.forEach(cat => { counts[cat.id] = 0; });
     menuItems.forEach(item => {
-      const category = item.category || 'Food';
-      if (counts[category] !== undefined) {
-        counts[category]++;
-      }
+      if (counts[item.category] !== undefined) counts[item.category]++;
     });
 
-    const summary = `${counts['Food']} food, ${counts['Drink']} drinks, ${counts['Sub Combo']} combos`;
+    const summary = categories
+      .map(cat => `${counts[cat.id]} ${cat.label.toLowerCase()}`)
+      .join(', ');
     showStatus(`✅ Saved ${menuItems.length} items (${summary}) and custom messages successfully!`, 'success');
 
     setTimeout(() => {
@@ -360,7 +310,6 @@ function saveConfig() {
       status.textContent = '';
       status.className = '';
     }, 5000);
-
   }
   catch (error) {
     console.error('❌ Save failed:', error);

@@ -1,14 +1,13 @@
 //console.log('📋 Menu utility loaded');
 
-// Hardcoded categories
-const CATEGORIES = ['Food', 'Drink', 'Sub Combo'];
-let currentCategory = 'Food'; // Default category - will be updated to first non-empty category
+// Categories are now loaded dynamically from config — no hardcoded array.
+let currentCategory = null; // Default category - will be updated to first non-empty category ID
 let isOnCooldown = false; // Track if user is currently on cooldown
 let cooldownIntervalId = null; // Track the cooldown timer interval
 
 /**
  * Loads menu configuration from Twitch Configuration Service
- * @returns {Array|null} Array of menu items or null if not configured
+ * @returns {Object|null} { categories, menuItems } or null if not configured
  */
 function loadMenuConfig() {
   //console.log('Loading config...');
@@ -19,7 +18,23 @@ function loadMenuConfig() {
     // console.log('📦 Config loaded:', data.menuItems?.length || 0, 'items');
 
     if (data.menuItems && data.menuItems.length > 0) {
-      return data.menuItems;
+      // Support legacy configs that have no categories array
+      if (!data.categories) {
+        data.categories = [
+          { id: 'cat_1', label: 'Food' },
+          { id: 'cat_2', label: 'Drink' },
+          { id: 'cat_3', label: 'Sub Combo' }
+        ];
+        // Remap legacy label-based category values to IDs
+        const labelToId = {};
+        data.categories.forEach(c => { labelToId[c.label] = c.id; });
+        data.menuItems = data.menuItems.map(item => ({
+          ...item,
+          category: labelToId[item.category] || 'cat_1'
+        }));
+      }
+
+      return { categories: data.categories, menuItems: data.menuItems };
     }
   }
 
@@ -27,58 +42,57 @@ function loadMenuConfig() {
 }
 
 /**
- * Groups menu items by category
+ * Groups menu items by category ID
  * @param {Array} items - Array of menu item objects
- * @returns {Object} Items grouped by category
+ * @param {Array} cats - Array of category objects { id, label }
+ * @returns {Object} Items grouped by category ID
  */
-function groupItemsByCategory(items) {
-  const grouped = {
-    'Food': [],
-    'Drink': [],
-    'Sub Combo': []
-  };
+function groupItemsByCategory(items, cats) {
+  const grouped = {};
+  cats.forEach(cat => { grouped[cat.id] = []; });
 
   items.forEach(item => {
-    const category = item.category || 'Food'; // Default to Food if no category
-    if (grouped[category]) {
-      grouped[category].push(item);
+    const catId = item.category;
+    if (grouped[catId] !== undefined) {
+      grouped[catId].push(item);
     }
+    // Items with an unknown category ID are silently skipped on the panel
   });
 
-  // console.log('📊 Items by category:', {
-  //   Food: grouped['Food'].length,
-  //   Drink: grouped['Drink'].length,
-  //   'Sub Combo': grouped['Sub Combo'].length
-  // });
+  // console.log('📊 Items by category:', Object.fromEntries(
+  //   cats.map(c => [c.label, grouped[c.id].length])
+  // ));
 
   return grouped;
 }
 
 /**
  * Finds the first non-empty category to use as default
- * @param {Object} groupedItems - Items grouped by category
- * @returns {string} First category with items, or 'Food' as fallback
+ * @param {Object} groupedItems - Items grouped by category ID
+ * @param {Array} cats - Ordered categories array { id, label }
+ * @returns {string|null} First category ID with items, or first category ID as fallback
  */
-function findDefaultCategory(groupedItems) {
+function findDefaultCategory(groupedItems, cats) {
   // Check each category in order
-  for (const category of CATEGORIES) {
-    if (groupedItems[category] && groupedItems[category].length > 0) {
-      // console.log(`🎯 Default category set to: ${category}`);
-      return category;
+  for (const cat of cats) {
+    if (groupedItems[cat.id] && groupedItems[cat.id].length > 0) {
+      // console.log(`🎯 Default category set to: ${cat.label}`);
+      return cat.id;
     }
   }
 
-  // Fallback to Food if all categories are empty (shouldn't happen)
-  console.log('🎯 Default category: Food (fallback)');
-  return 'Food';
+  // Fallback to first category if all are empty (shouldn't happen)
+  console.log('🎯 Default category: first category (fallback)');
+  return cats.length > 0 ? cats[0].id : null;
 }
 
 /**
  * Displays category tabs
- * @param {Object} groupedItems - Items grouped by category
- * @param {Function} onTabClick - Callback when tab is clicked
+ * @param {Object} groupedItems - Items grouped by category ID
+ * @param {Array} cats - Ordered categories array { id, label }
+ * @param {Function} onTabClick - Callback when tab is clicked, receives category ID
  */
-function displayCategoryTabs(groupedItems, onTabClick) {
+function displayCategoryTabs(groupedItems, cats, onTabClick) {
   const tabsContainer = document.getElementById('categoryTabs');
 
   if (!tabsContainer) {
@@ -89,24 +103,24 @@ function displayCategoryTabs(groupedItems, onTabClick) {
   tabsContainer.innerHTML = '';
 
   // Set default category to first non-empty category
-  currentCategory = findDefaultCategory(groupedItems);
+  currentCategory = findDefaultCategory(groupedItems, cats);
 
-  CATEGORIES.forEach(category => {
-    const itemCount = groupedItems[category].length;
+  cats.forEach(cat => {
+    const itemCount = (groupedItems[cat.id] || []).length;
 
     const tab = document.createElement('button');
     tab.className = 'category-tab';
-    tab.setAttribute('data-category', category);
+    tab.setAttribute('data-category', cat.id);
 
     // Add active class to current category
-    if (category === currentCategory) {
+    if (cat.id === currentCategory) {
       tab.classList.add('active');
     }
 
     // Create tab content with category name and count
     const tabText = document.createElement('div');
     tabText.className = 'tab-text';
-    tabText.textContent = category;
+    tabText.textContent = cat.label;
 
     const tabCount = document.createElement('div');
     tabCount.className = 'tab-count';
@@ -115,7 +129,7 @@ function displayCategoryTabs(groupedItems, onTabClick) {
     tab.appendChild(tabText);
     tab.appendChild(tabCount);
 
-    tab.addEventListener('click', () => onTabClick(category));
+    tab.addEventListener('click', () => onTabClick(cat.id));
 
     tabsContainer.appendChild(tab);
   });
