@@ -116,16 +116,29 @@ export default async function handler(req, res) {
       });
     }
 
-    // Category is now a dynamic ID (e.g. 'cat_1', 'cat_1748392039123').
-    // We trust the JWT-authenticated request and validate the category format only.
-    // The backend looks up the actual message from the streamer's config, so an
-    // unknown ID will just fall back to the default message — no spoofing risk.
-    if (typeof category !== 'string' || category.length > 50 || !/^[a-zA-Z0-9_]+$/.test(category)) {
+    // Basic category type guard check
+    if (typeof category !== 'string' || category.length > 50) {
       return res.status(400).json({
         error: "Invalid category",
         details: "Category must be a valid identifier string"
       });
     }
+
+    // Check if the current API request is using legacy labels or dynamics IDs
+    const LEGACY_CATEGORIES = ['Food', 'Drink', 'Sub Combo'];
+    const isLegacyCategory = LEGACY_CATEGORIES.includes(category);
+
+    // Allow legacy labels or new ID format
+    if (!isLegacyCategory && !/^[a-zA-Z0-9_]+$/.test(category)) {
+      return res.status(400).json({
+        error: "Invalid category",
+        details: "Category must be a valid identifier string"
+      });
+    }
+
+    // Normalize legacy label to ID so the message lookup always uses ID keys
+    const legacyLabelToId = { 'Food': 'cat_1', 'Drink': 'cat_2', 'Sub Combo': 'cat_3' };
+    const resolvedCategory = legacyLabelToId[category] || category;
 
     /*
     ===========================================================
@@ -135,11 +148,11 @@ export default async function handler(req, res) {
     const messages = await getCategoryMessages(channelId);
 
     // Always send a message that the viewer has recieved the order.
-    const successMessage = formatSuccessMessage(messages.success, category, username, item);
+    const successMessage = formatSuccessMessage(messages.success, resolvedCategory, username, item);
 
     // 8% chance to fail
     const hasFailed = shouldFail()
-    const failMessage =  hasFailed ? formatFailMessage(messages.failure, category, username, item) : null;
+    const failMessage =  hasFailed ? formatFailMessage(messages.failure, resolvedCategory, username, item) : null;
 
     /*
     ===================================================
