@@ -54,14 +54,15 @@ If that is not the case, open the **Extension Configuration** panel in your Twit
 
 **To add a menu item:**
 
-1. Select a **Category** — choose from `Food`, `Drink`, or `Sub Combo`. This will appear in a dropdown menu when you click the fieldbox.
+1. Select a **Category** — three default categories (`Food`, `Drink`, or `Sub Combo`) are provided, but you can create your own in the **Categories** tab
+   - When selecting a category, a dropdown menu will appear when you click the fieldbox.
 2. Enter an **Item Name** (e.g., `Matcha Latte`, `Strawberry Cake`).
 3. Add a short **Description** (e.g., `A smooth, earthy green tea latte`).
 4. Click **Add Item**.
 
 **Tips:**
 
-- You can add as many items as you like across all three categories.
+- You can add as many items as you like across all categories.
 - Duplicate item names are not allowed within the same save — keep names unique!
 - Make sure to click **Save All Changes** button when you're done to push any changes to the menu live to viewers.
 - If you're adding items to an already configured menu, viewers/streamers may need to **refresh their Twitch page** for the new items to appear in the panel.
@@ -108,11 +109,9 @@ Once your menu is saved, you're all set. The panel will immediately reflect your
 ### How to Use the Menu
 
 1. Find the **UniCat Cafe** panel below the stream.
-2. Browse the menu tabs: **Food**, **Drink**, and **Sub Combo**.
+2. Browse the menu tabs.
 3. Find something you like and click the **Order** button.
 4. CafeCatBot will post a message in chat announcing your order!
-
-> 📱 The panel is only optimized for desktop viewing. If you're on the mobile app, you will not see the panel — check the channel page directly for access.
 
 ---
 
