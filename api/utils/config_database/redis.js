@@ -17,7 +17,10 @@ export async function get(key) {
 
   const data = await response.json();
 
-  if (data.result === null) return null
+  if (data.result === null) {
+    console.log("Something went wrong with fetching to Redis.")
+    return null
+  }
 
   // Deserialize JSON
   return typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
@@ -37,5 +40,10 @@ export async function set(key, value) {
   })
 
   const data = await response.json();
+  if (!data.ok) {
+    console.log("Something went wrong with setting to Redis.")
+    return false
+  }
+
   return data.result === 'OK'
 }

@@ -9,23 +9,54 @@ let cooldownIntervalId = null; // Track the cooldown timer interval
  * Loads menu configuration from Twitch Configuration Service
  * @returns {Object|null} { categories, menuItems } or null if not configured
  */
-function loadMenuConfig() {
+async function loadMenuConfig() {
   //console.log('Loading config...');
+  try {
+    const channelId = window.Twitch.ext.viewer.channelId;
+    const response = await fetch(`${BACKEND_URL}/api/config?channelId=${channelId}`);
+
+    if (response.ok) {
+      const data = await response.json();
+      // console.log('📦 Config loaded:', data.menuItems?.length || 0, 'items');
+
+      if (data.menuItems && data.menuItems.length > 0) {
+        // Support legacy configs with no categories array
+        if (!data.categories) {
+          data.categories = [
+            { id: 'cat_1', label: 'Food' },
+            { id: 'cat_2', label: 'Drink' },
+            { id: 'cat_3', label: 'Sub Combo' }
+          ];
+          // Remap legacy label-based category values to IDs
+          const labelToId = {};
+          data.categories.forEach(c => { labelToId[c.label] = c.id; });
+          data.menuItems = data.menuItems.map(item => ({
+            ...item,
+            category: labelToId[item.category] || 'cat_1'
+          }));
+        }
+
+        return { categories: data.categories, menuItems: data.menuItems };
+      }
+    }
+  }
+  catch (error) {
+    console.warn("Falling back to Twitch API for config");
+  }
+
+  // Fallback to Twitch API if config not in database or error fetching
   const config = window.Twitch.ext.configuration.broadcaster;
 
   if (config && config.content) {
     const data = JSON.parse(config.content);
-    // console.log('📦 Config loaded:', data.menuItems?.length || 0, 'items');
 
     if (data.menuItems && data.menuItems.length > 0) {
-      // Support legacy configs that have no categories array
       if (!data.categories) {
         data.categories = [
           { id: 'cat_1', label: 'Food' },
           { id: 'cat_2', label: 'Drink' },
           { id: 'cat_3', label: 'Sub Combo' }
         ];
-        // Remap legacy label-based category values to IDs
         const labelToId = {};
         data.categories.forEach(c => { labelToId[c.label] = c.id; });
         data.menuItems = data.menuItems.map(item => ({

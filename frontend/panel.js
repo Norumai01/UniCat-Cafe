@@ -45,13 +45,13 @@ window.Twitch.ext.onAuthorized(async (auth) => {
     showUsernameFetchError();
     return;
   }
-  loadAndDisplayMenu();
+  await loadAndDisplayMenu();
   checkInitialCooldown();
 });
 
 // Load menu configuration and display it
-function loadAndDisplayMenu() {
-  const menuConfig = loadMenuConfig();
+async function loadAndDisplayMenu() {
+  const menuConfig = await loadMenuConfig();
 
   if (menuConfig && menuConfig.menuItems.length > 0) {
     allMenuItems = menuConfig.menuItems;
@@ -69,11 +69,9 @@ function loadAndDisplayMenu() {
 
     // Update item count
     updateItemCount(allMenuItems.length, (groupedMenuItems[currentCategory] || []).length);
-  }
-  else if (menuConfig === null) {
+  } else if (menuConfig === null) {
     showError('Streamer needs to configure menu items!');
-  }
-  else {
+  } else {
     showError('No menu items configured yet.');
   }
 }
