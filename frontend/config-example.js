@@ -349,9 +349,11 @@ async function saveConfig() {
         status.className = '';
       }, 5000);
     }
-    // Fail to save configuration into database.
-    const err = await response.json()
-    showStatus(`❌ Save failed: ${err.error}`, 'error');
+    else {
+      // Fail to save configuration into database.
+      const err = await response.json()
+      showStatus(`❌ Save failed: ${err.error}`, 'error');
+    }
   }
   catch (error) {
     console.error('❌ Save failed:', error);
