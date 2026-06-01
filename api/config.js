@@ -13,17 +13,7 @@ export default async function handler(req, res) {
   switch (method) {
     case 'GET':
       // GET: Load config from channel, retrieve data from Redis
-      const { channelId } = req.query;
-      if (!channelId) {
-        return res.status(400).json({ error: "Missing channel ID" });
-      }
-
-      const config = await get(`config:${channelId}`);
-      if (!config) {
-        return res.status(404).json({ error: "Config not found" });
-      }
-
-      return res.status(200).json(config);
+      return await getChannelConfig(req, res);
     case 'POST':
       // POST: Save config to channel, store data in Redis
       return await saveChannelConfig(req, res);
@@ -32,6 +22,23 @@ export default async function handler(req, res) {
       console.log(`Method ${method} not allowed`);
       return res.status(405).json({error: "Method not allowed"});
   }
+}
+
+async function getChannelConfig(req, res) {
+  const { channelId } = req.query;
+
+  if (!channelId) {
+    console.log("Missing channel ID");
+    return res.status(400).json({error: "Missing channel ID"});
+  }
+
+  const config = await get(`config:${channelId}`);
+  if (!config) {
+    console.log("Config not found");
+    return res.status(404).json({error: "Config not found"});
+  }
+
+  return res.status(200).json(config);
 }
 
 async function saveChannelConfig(req, res) {
