@@ -28,6 +28,9 @@ async function getChannelConfig(req, res) {
   const REDIS_URL = process.env.KV_REST_API_URL
   const REDIS_TOKEN = process.env.KV_REST_API_TOKEN
 
+  console.log("Redis URL: ", REDIS_URL);
+  console.log("Redis Token: ", REDIS_TOKEN);
+
   const { channelId } = req.query;
 
   if (!channelId) {
@@ -47,6 +50,9 @@ async function getChannelConfig(req, res) {
 async function saveChannelConfig(req, res) {
   const REDIS_URL = process.env.KV_REST_API_URL
   const REDIS_TOKEN = process.env.KV_REST_API_TOKEN
+
+  console.log("Redis URL: ", REDIS_URL);
+  console.log("Redis Token: ", REDIS_TOKEN);
 
   // Verify JWT so only the broadcaster can save
   const authHeader = req.headers.authorization || req.headers.Authorization;
