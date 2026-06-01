@@ -14,8 +14,10 @@ export async function get(key, REDIS_URL, REDIS_TOKEN) {
   }
 
   const data = await response.json();
+  console.log("Response", response)
+  console.log("Data", data)
 
-  if (data.result === null || data.result === undefined) {
+  if (!data) {
     console.log("Something went wrong with fetching from Redis.")
     return null
   }
