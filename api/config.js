@@ -25,6 +25,9 @@ export default async function handler(req, res) {
 }
 
 async function getChannelConfig(req, res) {
+  const REDIS_URL = process.env.KV_REST_API_URL
+  const REDIS_TOKEN = process.env.KV_REST_API_TOKEN
+
   const { channelId } = req.query;
 
   if (!channelId) {
@@ -32,7 +35,7 @@ async function getChannelConfig(req, res) {
     return res.status(400).json({error: "Missing channel ID"});
   }
 
-  const config = await get(`config:${channelId}`);
+  const config = await get(`config:${channelId}`, REDIS_URL, REDIS_TOKEN);
   if (!config) {
     console.log("Config not found");
     return res.status(404).json({error: "Config not found"});
@@ -42,6 +45,9 @@ async function getChannelConfig(req, res) {
 }
 
 async function saveChannelConfig(req, res) {
+  const REDIS_URL = process.env.KV_REST_API_URL
+  const REDIS_TOKEN = process.env.KV_REST_API_TOKEN
+
   // Verify JWT so only the broadcaster can save
   const authHeader = req.headers.authorization || req.headers.Authorization;
 
@@ -72,7 +78,7 @@ async function saveChannelConfig(req, res) {
     return res.status(400).json({error: "Invalid request data"});
   }
 
-  const ok = await set(`config:${channelId}`, configData)
+  const ok = await set(`config:${channelId}`, configData, REDIS_URL, REDIS_TOKEN)
   if (!ok) {
     console.log("Failed to save config");
     return res.status(500).json({error: "Failed to save config"});
