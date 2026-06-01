@@ -1,7 +1,14 @@
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const REDIS_URL = process.env.KV_REST_API_URL
+const REDIS_TOKEN = process.env.KV_REST_API_TOKEN
+
 /*
 * Get a value from Redis
 */
-export async function get(key, REDIS_URL, REDIS_TOKEN) {
+export async function get(key) {
   const response = await fetch(`${REDIS_URL}/get/${encodeURIComponent(key)}`, {
     headers: {
       'Authorization': `Bearer ${REDIS_TOKEN}`
@@ -29,7 +36,7 @@ export async function get(key, REDIS_URL, REDIS_TOKEN) {
 /*
 * Set a value in Redis
 */
-export async function set(key, value, REDIS_URL, REDIS_TOKEN) {
+export async function set(key, value) {
   const response = await fetch(`${REDIS_URL}/set/${encodeURIComponent(key)}`, {
     method: 'POST',
     headers: {
