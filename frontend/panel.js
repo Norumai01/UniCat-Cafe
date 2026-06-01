@@ -45,13 +45,13 @@ window.Twitch.ext.onAuthorized(async (auth) => {
     showUsernameFetchError();
     return;
   }
-  await loadAndDisplayMenu();
+  await loadAndDisplayMenu(auth.channelId);
   checkInitialCooldown();
 });
 
 // Load menu configuration and display it
-async function loadAndDisplayMenu() {
-  const menuConfig = await loadMenuConfig();
+async function loadAndDisplayMenu(streamerChannelId) {
+  const menuConfig = await loadMenuConfig(streamerChannelId);
 
   if (menuConfig && menuConfig.menuItems.length > 0) {
     allMenuItems = menuConfig.menuItems;

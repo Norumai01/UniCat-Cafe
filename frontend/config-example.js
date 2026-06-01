@@ -13,12 +13,14 @@ let failMessages = {};
 
 // ⚙️ UPDATE THIS with your Vercel URL
 const BACKEND_URL = 'https://your-vercel-url.vercel.app';
+let twitchAuth = null;
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 window.Twitch.ext.onAuthorized(async (auth) => {
   //console.log('✅ Authorized!');
-  await loadExisting(auth.channelId);
+  twitchAuth = auth;
+  await loadExisting(twitchAuth);
 
   // Attach event listeners
   document.getElementById('addItemButton').addEventListener('click', addMenuItem);
@@ -31,15 +33,21 @@ window.Twitch.ext.onAuthorized(async (auth) => {
  * Loads existing config from Twitch Configuration Service.
  * Handles legacy migration and first-install seeding.
  */
-async function loadExisting(channelId) {
+async function loadExisting(auth) {
   let data = null;
 
   //  Obtain config from Redis
   try {
-    const response = await fetch(`${BACKEND_URL}/api/config?channelId=${channelId}`)
+    const response = await fetch(`${BACKEND_URL}/api/config?channelId=${auth.channelId}`)
 
     if (response.ok) {
       data = await response.json();
+      // console.log('data:', data); // Debugging
+
+      if (typeof data === 'string') {
+        data = JSON.parse(data);
+        // console.log('data:', data);
+      }
     }
   }
   catch (error) {
@@ -50,16 +58,18 @@ async function loadExisting(channelId) {
   // Fallback to Twitch EBS Database to fetch config
   if (!data) {
     const twitchConfig = window.Twitch.ext.configuration.broadcaster;
+    // console.log('Twitch EBS Database fallback:', twitchConfig); // Debugging
 
     if (twitchConfig && twitchConfig.content) {
       data = JSON.parse(twitchConfig.content);
+      // console.log('Twitch EBS Database fallback data:', data); // Debugging
 
       // Silently migrate to Redis in the background
       fetch(`${BACKEND_URL}/api/config`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${window.Twitch.ext.viewer.token}`
+          'Authorization': `Bearer ${auth.token}`
         },
         body: JSON.stringify(data)
       }).catch(e => console.warn('Background migration failed:', e));
@@ -323,12 +333,12 @@ async function saveConfig() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${window.Twitch.ext.viewer.token}`
+        'Authorization': `Bearer ${twitchAuth.token}`
       },
       body: JSON.stringify(configData)
     })
 
-    //console.log('✅ Config saved!');
+    //console.log('Response:', response); Debugging
 
     if (response.ok) {
       // Count items by category dynamically
@@ -348,6 +358,8 @@ async function saveConfig() {
         status.textContent = '';
         status.className = '';
       }, 5000);
+
+      //console.log('✅ Config saved!');
     }
     else {
       // Fail to save configuration into database.

@@ -42,7 +42,7 @@ async function getChannelConfig(req, res) {
     return res.status(404).json({error: "Config not found"});
   }
 
-  return config;
+  return res.status(200).json(config);
 }
 
 async function saveChannelConfig(req, res) {

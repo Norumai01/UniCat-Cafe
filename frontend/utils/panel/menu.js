@@ -9,15 +9,20 @@ let cooldownIntervalId = null; // Track the cooldown timer interval
  * Loads menu configuration from Twitch Configuration Service
  * @returns {Object|null} { categories, menuItems } or null if not configured
  */
-async function loadMenuConfig() {
+async function loadMenuConfig(streamerChannelId) {
   //console.log('Loading config...');
   try {
-    const channelId = window.Twitch.ext.viewer.channelId;
-    const response = await fetch(`${BACKEND_URL}/api/config?channelId=${channelId}`);
+    const response = await fetch(`${BACKEND_URL}/api/config?channelId=${streamerChannelId}`);
 
     if (response.ok) {
-      const data = await response.json();
+      let data = await response.json();
       // console.log('📦 Config loaded:', data.menuItems?.length || 0, 'items');
+      if (typeof data === "string") {
+        data = JSON.parse(data)
+      }
+
+      // console.log("data:", data)
+      // console.log("streamerChannelId:", streamerChannelId)
 
       if (data.menuItems && data.menuItems.length > 0) {
         // Support legacy configs with no categories array
