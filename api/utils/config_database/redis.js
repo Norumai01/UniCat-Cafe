@@ -15,10 +15,15 @@ export async function get(key) {
     }
   });
 
+  if (!response.ok) {
+    console.log("HTTP error reading from Redis:", response.status);
+    return null;
+  }
+
   const data = await response.json();
 
-  if (data.result === null) {
-    console.log("Something went wrong with fetching to Redis.")
+  if (data.result === null || data.result === undefined) {
+    console.log("Something went wrong with fetching from Redis.")
     return null
   }
 
@@ -38,12 +43,11 @@ export async function set(key, value) {
     },
     body: JSON.stringify(JSON.stringify(value)) // Double stringify so upstash stores it as a string
   })
-
-  const data = await response.json();
-  if (!data.ok) {
-    console.log("Something went wrong with setting to Redis.")
-    return false
+  if (!response.ok) {
+    console.log("HTTP error writing to Redis:", response.status);
+    return false;
   }
 
+  const data = await response.json();
   return data.result === 'OK'
 }
