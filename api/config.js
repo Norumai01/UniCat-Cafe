@@ -25,6 +25,10 @@ export default async function handler(req, res) {
 }
 
 async function getChannelConfig(req, res) {
+  // Prevent caching
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+
   const { channelId } = req.query;
 
   if (!channelId) {
