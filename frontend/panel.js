@@ -49,7 +49,7 @@ window.Twitch.ext.onAuthorized(async (auth) => {
   checkInitialCooldown();
 });
 
-// Load menu configuration and display it
+// Load menu configuration and display it. Expect return code 304.
 async function loadAndDisplayMenu(streamerChannelId) {
   const menuConfig = await loadMenuConfig(streamerChannelId);
 
@@ -176,7 +176,12 @@ async function handleOrderClick(item, button) {
 // Listen for config changes
 window.Twitch.ext.configuration.onChanged(() => {
   //console.log('Config changed! Reloading...');
-  loadAndDisplayMenu();
+  if (twitchAuth) {
+    loadAndDisplayMenu(twitchAuth.channelId).catch(error => {
+      console.error('Failed to reload menu:', error);
+      showError('Failed to reload menu. Please try again.');
+    })
+  }
 });
 
 //console.log('🐱 Cat Cafe Panel ready!');
