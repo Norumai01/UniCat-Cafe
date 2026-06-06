@@ -69,10 +69,12 @@ async function loadAndDisplayMenu(streamerChannelId) {
 
     // Update item count
     updateItemCount(allMenuItems.length, (groupedMenuItems[currentCategory] || []).length);
-  } else if (menuConfig === null) {
-    showError('Streamer needs to configure menu items!');
-  } else {
-    showError('No menu items configured yet.');
+  }
+  else if (menuConfig === null) {
+    showError('Streamer needs to configure menu items or something went wrong.');
+  }
+  else {
+    showError('No menu items configured yet or something went wrong.');
   }
 }
 
