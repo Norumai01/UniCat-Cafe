@@ -36,7 +36,7 @@ UniCat Cafe lets your viewers browse a menu, place orders, and receive personali
 - **Frontend** — Vanilla JavaScript, CSS with pixel art styling, localStorage for cooldown state
 - **Backend** — Node.js serverless functions hosted on Vercel
 - **Auth** — Twitch JWT verification for secure Extension API calls
-- **Storage** — Twitch Configuration Service (no external database needed)
+- **Storage** — Upstash for Redis and Twitch Configuration Service for persistent configuration data
 - **Chat** — Twitch IRC / bot OAuth for CafeCatBot messages
 - **Assets** — Custom pixel art by [munchtea](https://munchtea.carrd.co) *(licensed — see below)*
 
