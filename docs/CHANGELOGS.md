@@ -25,3 +25,10 @@
 - Data schema changed to from hardcoded categories to a dynamic IDs category system
 - Backend API changed to use category IDs and also migrate existing data to the new schema.
 - Cleaned up the code to be more readable and maintainable.
+
+## Version 0.3.0
+
+- Integrated Upstash with Redis for storing streamer's configuration data, due to Twitch configuration size limit.
+- Added Config API route that interface with Upstash to store and retrieve streamer's configuration data.
+- Updated the UI to use the new Config API route.
+- Updated privacy policy and terms of service.

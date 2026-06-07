@@ -96,7 +96,10 @@ node_modules
 # OS files
 .DS_Store
 Thumbs.db
+
+# Other files
 /frontend/extension.zip
 /frontend/utils/panel/api.js
 /frontend/utils/panel/api-production.js
 /frontend/config.js
+frontend.zip

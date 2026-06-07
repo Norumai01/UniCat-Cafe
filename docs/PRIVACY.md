@@ -1,6 +1,6 @@
 # Privacy Policy for UniCat Cafe Twitch Extension
 
-**Last Updated: Feb 27, 2026**
+**Last Updated: Jun 7, 2026**
 
 This Privacy Policy explains how UniCat Cafe (the "Extension") collects, uses, and protects information when you use our services.
 
@@ -13,7 +13,7 @@ This Privacy Policy explains how UniCat Cafe (the "Extension") collects, uses, a
 
 ### For Streamers:
 - **Channel Information**: Twitch channel ID and broadcaster information
-- **Configuration Data**: Menu customizations including item names, descriptions and categories
+- **Configuration Data**: Menu customizations including item names, descriptions, and categories
 
 ### Cookies and Local Storage:
 - **Browser Storage**: Cooldown timers stored locally on your device using localStorage. This data does not leave your browser and is not transmitted to our servers.
@@ -23,7 +23,7 @@ This Privacy Policy explains how UniCat Cafe (the "Extension") collects, uses, a
 We use collected information to:
 - Operate and maintain the Extension's core functionality
 - Display personalized chat messages for users who share their identity via linking twitch account to Extension
-- Store and retrieve streamer menu customizations via Twitch's Configuration Service
+- Store and retrieve streamer menu customizations via Twitch's Configuration Service and Redis-based database.
 - Implement cooldown systems to prevent spam and abuse
 - Improve Extension performance and user experience
 - Enforce rate limits and prevent exploits
@@ -45,9 +45,9 @@ If such cases occur, all third parties are required to protect your data and use
 
 - **Viewer Orders**: Not stored persistently (ephemeral processing only)
 - **Cooldown Timers**: Stored in your local browser (localStorage) until you clear your cache
-- **Streamer Configurations**: Retained via Twitch Configuration Service until you uninstall the Extension
+- **Streamer Configurations**: Retained via Twitch Configuration Service and Redis-based database.
 
-UniCat Cafe does not persistently store viewer data on our servers. Streamer configurations are retained locally via Twitch's Configuration Service and can be removed by uninstalling the Extension. For any privacy questions or concerns, contact us at twitch.norumai@gmail.com.
+UniCat Cafe does not persistently store viewer data on our servers. Streamer configurations are retained via Twitch's Configuration Service and Redis-based database. Data on Twitch's server is retained. Configuration data is also stored in our Redis database, can be removed upon request. Contact twitch.norumai@gmail.com, if you have a request or question.
 
 ## 5. Data Security
 
@@ -62,15 +62,15 @@ However, no system is completely secure. You use this Extension at your own risk
 ## 6. Your Rights and Choices
 
 - **Identity Control**: You can choose not to share your identity for personalized features
-- **Data Access**: We do not persistently store personal viewer data on our servers. Streamer configuration are stored locally.
-- **Data Deletion**: Streamers can remove their configuration data by uninstalling the Extension through Twitch.
+- **Data Access**: We do not persistently store personal viewer data on our servers. 
+- **Data Deletion**: Streamers can request removal of their configurations from our database.
 - **Opt-Out**: Uninstall the Extension at any time to stop data collection
 
-For any additional questions or concerns, contact us at **twitch.norumai@gmail.com**.
+For any request, questions, or concerns, contact us at **twitch.norumai@gmail.com**.
 
 ## 7. Third-Party Services
 
-The Extension integrates with Twitch APIs and may interact with other third-party services (e.g. vercel). We are not responsible for the privacy practices of these services. Please review their privacy policies before using the extension.
+The Extension integrates with Twitch APIs and may interact with other third-party services (e.g. vercel, upstash). We are not responsible for the privacy practices of these services. Please review their privacy policies before using the extension.
 
 ## 8. Open Source Transparency
 
@@ -96,4 +96,4 @@ We may update this Privacy Policy when adding features or as required by law. Co
 
 ## 13. Contact Us
 
-For questions or concerns about this Privacy Policy: **twitch.norumai@gmail.com**
+For any request, questions, or concerns about this Privacy Policy: **twitch.norumai@gmail.com**

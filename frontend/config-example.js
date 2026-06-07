@@ -341,6 +341,9 @@ async function saveConfig() {
     //console.log('Response:', response); Debugging
 
     if (response.ok) {
+      // Save to Twitch EBS, in case of fallback
+      saveConfigToTwitch(configData);
+
       // Count items by category dynamically
       const counts = {};
       categories.forEach(cat => { counts[cat.id] = 0; });
@@ -370,6 +373,19 @@ async function saveConfig() {
   catch (error) {
     console.error('❌ Save failed:', error);
     showStatus('❌ Error: ' + error.message, 'error');
+  }
+}
+
+function saveConfigToTwitch(configData) {
+  try {
+    window.Twitch.ext.configuration.set(
+      'broadcaster',
+      '1.0',
+      JSON.stringify(configData),
+    );
+  }
+  catch (twitchError) {
+    console.warn('Twitch EBS configuration update failed (likely size limits):', twitchError);
   }
 }
 
