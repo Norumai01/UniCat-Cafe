@@ -11,11 +11,16 @@ let editingItemId = null; // Track which item is being edited
 let categoryMessages = {};
 let failMessages = {};
 
+// ⚙️ UPDATE THIS with your Vercel URL
+const BACKEND_URL = 'https://your-vercel-url.vercel.app';
+let twitchAuth = null;
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
-window.Twitch.ext.onAuthorized(() => {
+window.Twitch.ext.onAuthorized(async (auth) => {
   //console.log('✅ Authorized!');
-  loadExisting();
+  twitchAuth = auth;
+  await loadExisting(twitchAuth);
 
   // Attach event listeners
   document.getElementById('addItemButton').addEventListener('click', addMenuItem);
@@ -28,11 +33,50 @@ window.Twitch.ext.onAuthorized(() => {
  * Loads existing config from Twitch Configuration Service.
  * Handles legacy migration and first-install seeding.
  */
-function loadExisting() {
-  const config = window.Twitch.ext.configuration.broadcaster;
+async function loadExisting(auth) {
+  let data = null;
 
-  if (config && config.content) {
-    const data = JSON.parse(config.content);
+  //  Obtain config from Redis
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/config?channelId=${auth.channelId}`)
+
+    if (response.ok) {
+      data = await response.json();
+      // console.log('data:', data); // Debugging
+
+      if (typeof data === 'string') {
+        data = JSON.parse(data);
+        // console.log('data:', data);
+      }
+    }
+  }
+  catch (error) {
+    console.error('Failed to fetch config: ', error);
+    showStatus("Error fetching config", 'error');
+  }
+
+  // Fallback to Twitch EBS Database to fetch config
+  if (!data) {
+    const twitchConfig = window.Twitch.ext.configuration.broadcaster;
+    // console.log('Twitch EBS Database fallback:', twitchConfig); // Debugging
+
+    if (twitchConfig && twitchConfig.content) {
+      data = JSON.parse(twitchConfig.content);
+      // console.log('Twitch EBS Database fallback data:', data); // Debugging
+
+      // Silently migrate to Redis in the background
+      fetch(`${BACKEND_URL}/api/config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`
+        },
+        body: JSON.stringify(data)
+      }).catch(e => console.warn('Background migration failed:', e));
+    }
+  }
+
+  if (data) {
     //console.log('Existing config:', data);
 
     // ── Migrate legacy configs (no categories array = pre-dynamic-categories save) ──
@@ -63,7 +107,6 @@ function loadExisting() {
       // Fill any gaps with defaults
       categories.forEach(cat => {
         if (!categoryMessages[cat.id]) categoryMessages[cat.id] = defSuccess[cat.id];
-
         if (!failMessages[cat.id]) failMessages[cat.id] = defFail[cat.id];
       });
 
@@ -230,7 +273,7 @@ function removeMenuItem(id) {
 
 // ─── Save ─────────────────────────────────────────────────────────────────────
 
-function saveConfig() {
+async function saveConfig() {
   // console.log('Saving config...');
   // console.log('Menu items to save:', menuItems);
   // console.log('Category messages to save:', categoryMessages);
@@ -281,39 +324,68 @@ function saveConfig() {
     categoryMessages: categoryMessages,
     failMessages: failMessages,
     cooldown: 60, // 1 minute default
-    timestamp: new Date().toISOString()
+    // timestamp removed
   };
 
   try {
-    window.Twitch.ext.configuration.set(
-      'broadcaster',
-      '1.0',
-      JSON.stringify(configData)
-    );
+    // Update: Send config to Redis instead of Twitch EBS
+    const response = await fetch(`${BACKEND_URL}/api/config`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${twitchAuth.token}`
+      },
+      body: JSON.stringify(configData)
+    })
 
-    //console.log('✅ Config saved!');
+    //console.log('Response:', response); Debugging
 
-    // Count items by category dynamically
-    const counts = {};
-    categories.forEach(cat => { counts[cat.id] = 0; });
-    menuItems.forEach(item => {
-      if (counts[item.category] !== undefined) counts[item.category]++;
-    });
+    if (response.ok) {
+      // Save to Twitch EBS, in case of fallback
+      saveConfigToTwitch(configData);
 
-    const summary = categories
-      .map(cat => `${counts[cat.id]} ${cat.label.toLowerCase()}`)
-      .join(', ');
-    showStatus(`✅ Saved ${menuItems.length} items (${summary}) and custom messages successfully!`, 'success');
+      // Count items by category dynamically
+      const counts = {};
+      categories.forEach(cat => { counts[cat.id] = 0; });
+      menuItems.forEach(item => {
+        if (counts[item.category] !== undefined) counts[item.category]++;
+      });
 
-    setTimeout(() => {
-      const status = document.getElementById('status');
-      status.textContent = '';
-      status.className = '';
-    }, 5000);
+      const summary = categories
+        .map(cat => `${counts[cat.id]} ${cat.label.toLowerCase()}`)
+        .join(', ');
+      showStatus(`✅ Saved ${menuItems.length} items (${summary}) and custom messages successfully!`, 'success');
+
+      setTimeout(() => {
+        const status = document.getElementById('status');
+        status.textContent = '';
+        status.className = '';
+      }, 5000);
+
+      //console.log('✅ Config saved!');
+    }
+    else {
+      // Fail to save configuration into database.
+      const err = await response.json()
+      showStatus(`❌ Save failed: ${err.error}`, 'error');
+    }
   }
   catch (error) {
     console.error('❌ Save failed:', error);
     showStatus('❌ Error: ' + error.message, 'error');
+  }
+}
+
+function saveConfigToTwitch(configData) {
+  try {
+    window.Twitch.ext.configuration.set(
+      'broadcaster',
+      '1.0',
+      JSON.stringify(configData),
+    );
+  }
+  catch (twitchError) {
+    console.warn('Twitch EBS configuration update failed (likely size limits):', twitchError);
   }
 }
 

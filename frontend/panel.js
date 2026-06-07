@@ -45,13 +45,13 @@ window.Twitch.ext.onAuthorized(async (auth) => {
     showUsernameFetchError();
     return;
   }
-  loadAndDisplayMenu();
+  await loadAndDisplayMenu(auth.channelId);
   checkInitialCooldown();
 });
 
-// Load menu configuration and display it
-function loadAndDisplayMenu() {
-  const menuConfig = loadMenuConfig();
+// Load menu configuration and display it. Expect return code 304.
+async function loadAndDisplayMenu(streamerChannelId) {
+  const menuConfig = await loadMenuConfig(streamerChannelId);
 
   if (menuConfig && menuConfig.menuItems.length > 0) {
     allMenuItems = menuConfig.menuItems;
@@ -71,10 +71,10 @@ function loadAndDisplayMenu() {
     updateItemCount(allMenuItems.length, (groupedMenuItems[currentCategory] || []).length);
   }
   else if (menuConfig === null) {
-    showError('Streamer needs to configure menu items!');
+    showError('Streamer needs to configure menu items or something went wrong.');
   }
   else {
-    showError('No menu items configured yet.');
+    showError('No menu items configured yet or something went wrong.');
   }
 }
 
@@ -178,7 +178,12 @@ async function handleOrderClick(item, button) {
 // Listen for config changes
 window.Twitch.ext.configuration.onChanged(() => {
   //console.log('Config changed! Reloading...');
-  loadAndDisplayMenu();
+  if (twitchAuth) {
+    loadAndDisplayMenu(twitchAuth.channelId).catch(error => {
+      console.error('Failed to reload menu:', error);
+      showError('Failed to reload menu. Please try again.');
+    })
+  }
 });
 
 //console.log('🐱 Cat Cafe Panel ready!');
